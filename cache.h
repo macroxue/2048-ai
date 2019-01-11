@@ -25,7 +25,7 @@ class Cache {
            hit_count, hit_count * 100.0 / lookup_count);
     printf("updates: %10lld   collisions: %10lld (%4.1f%%)\n", update_count,
            collision_count, collision_count * 100.0 / update_count);
-    printf("entries: %10lld       loaded: %10lld (%4.1f%%)\n", kSize,
+    printf("entries: %10d       loaded: %10d (%4.1f%%)\n", kSize,
            loaded_count, loaded_count * 100.0 / kSize);
   }
 
