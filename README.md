@@ -71,7 +71,7 @@ The AI has two components.
    This can be slow due to exploring a vast search space and its strength
    depends on the search depth.
  * Near-optimal lookup for the next move when the board has certain features.
-   This is instantenous and handles the most difficult situations when large tiles
+   This is instantaneous and handles the most difficult situations when large tiles
    occupy the board.
    
 The two components work in tandem. The search drives large tiles to the top-left
