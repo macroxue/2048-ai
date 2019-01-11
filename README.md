@@ -22,7 +22,7 @@ The above numbers can be recreated with this command:
 ./2048 -d <depth> -i <games> 2001
 ```
 The AI is considerably stronger and faster than the previous best at [2], which
-reported 69% rate of reaching the 32768 tile but not the 65536 tile.
+reported 69% rate of reaching the 32768 tile but never the 65536 tile.
 
 
 ## System requirements
@@ -36,9 +36,9 @@ reported 69% rate of reaching the 32768 tile but not the 65536 tile.
 make
 ```
 
-## How to Run
+## How to run
 
-Be patient for the very first run. It can take 20 to 30 minutes to build and
+Be patient for the very first run. It can take 20 to 30 minutes to compute and
 save two lookup tables, depending on the speed of the system. Later runs are
 much faster by loading the tables within a few seconds.
 
@@ -94,7 +94,7 @@ The goal is to get the new 64 tile right next to the existing 64 tile while
 moving only the bottom row and the right-most column. It turns out that this
 can be achieved nearly 80% of the time. Why? Because one can apply the
 Expectimax algorithm until either the goal or a deadend is reached. This is
-usually infeasible during search because it may take many steps to reach the
+usually infeasible during search because it may take many moves to reach the
 goal or a deadend, way beyond the search depth.  However, with dynamic
 programming, this thorough exploration needs only to be done once. The best
 move for this board and the moves for all intermediate boards during
@@ -103,14 +103,14 @@ the exploration are saved for future lookups.
 The same idea is extended to have two moving rows and one moving column so
 building the next 512 tile can be from lookups as well. This greatly improves
 the strength and the speed of the AI, at the cost of more memory and more time
-in building the tables.  Right now, the AI uses roughly 10GB of memory to build
-the tables and 3.2GB after that.
+in computing the lookup tables.  Right now, the AI uses roughly 10GB of memory 
+to compute the tables and 3.2GB after that.
 
 ## Potential improvements
 
  * The search component has some weakness. Occasionally it gets stuck with the
 2048 tile or even lower.
- * Multiple threads can speed up building the lookup tables.
+ * Multiple threads can speed up computing the lookup tables.
  * In theory the lookup can be further extended to have two moving rows and two
 moving columns, given hundreds GB of memory.
 
