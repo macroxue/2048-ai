@@ -5,7 +5,7 @@ To find out the optimal move to get a 64 tile when you have something like
 1024  512   64    (5)
 (1)   (2)   (3)   (4)
 
-Collect the seven tiles in the given order and look for the move below.
+Collect the seven tiles in the order above and look for the move below.
 
 0,2,0,0,0,0,0:l
 2,2,0,0,0,0,0:l
