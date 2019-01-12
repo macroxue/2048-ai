@@ -35,10 +35,13 @@ char GetKey() {
 
 int InteractivePlay(Node* n, int* move, float prob) {
   auto show_move = [](int move, float prob) {
+    if (move >= 0)
+      printf("p(%s)=%f", Node::move_names[move], prob);
+    else
+      printf("deadend");
     printf(
-        "p(%s)=%f (' '=accept A|H=left, S|J=down, W|K=up, D|L=right, U=undo, "
-        "Q=quit)\n",
-        Node::move_names[move], prob);
+        ", Space=accept, A|H=left, S|J=down, W|K=up, D|L=right, U=undo, "
+        "Q=quit\n");
   };
 
   static std::vector<Snapshot> history;
