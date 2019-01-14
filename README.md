@@ -28,7 +28,7 @@ reported 69% rate of reaching the 32768 tile but never the 65536 tile.
 ## System requirements
 
  * A Linux environment with G++ compiler supporting c++0x or above.
- * 16GB of memory
+ * 8GB of memory
  * 4GB of free disk (SSD preferred)
 
 ## How to build
@@ -103,7 +103,7 @@ the exploration are saved for future lookups.
 The same idea is extended to have two moving rows and one moving column so
 building the next 512 tile can be from lookups as well. This greatly improves
 the strength and the speed of the AI, at the cost of more memory and more time
-in computing the lookup tables.  Right now, the AI uses roughly 10GB of memory 
+in computing the lookup tables.  Right now, the AI uses roughly 6GB of memory 
 to compute the tables and 3.2GB after that.
 
 ## Potential improvements
