@@ -1,7 +1,14 @@
+#include <netinet/in.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
 
+#include <functional>
+#include <thread>
 #include <vector>
 
 #include "node.h"
@@ -36,7 +43,7 @@ char GetKey() {
 int InteractivePlay(Node* n, int* move, float prob) {
   auto show_move = [](int move, float prob) {
     if (move >= 0)
-      printf("p(%s)=%f", Node::move_names[move], prob);
+      printf("p(%s)=%f", Board::move_names[move], prob);
     else
       printf("deadend");
     printf(
@@ -98,11 +105,121 @@ int InteractivePlay(Node* n, int* move, float prob) {
   return num_undos;
 }
 
+std::unique_ptr<Tuple10> tuple10;
+std::unique_ptr<Tuple11> tuple11;
+
+float SuggestMove(Node& n, int* m) {
+  float prob = 0;
+  if (tuple11) {
+    prob = tuple11->SuggestMove(n, m);
+    if (prob < 0.9) prob = 0;
+  }
+  if (prob == 0 && tuple10) {
+    prob = tuple10->SuggestMove(n, m);
+  }
+  if (prob == 0) n.Search(options.max_depth, m);
+  return prob;
+}
+
+int CharToRank(char ch) {
+  if ('0' <= ch && ch <= '9') return ch - '0';
+  if ('A' <= ch && ch <= 'G') return ch - 'A' + 10;
+  if ('a' <= ch && ch <= 'g') return ch - 'a' + 10;
+  return 0;
+}
+
+void RunAgent(int client_socket) {
+  printf("Accepted client socket %d\n", client_socket);
+  char buffer[1 << 16] = {0};
+  while (true) {
+    buffer[0] = '\0';
+    if (read(client_socket, buffer, sizeof(buffer)) < 0) break;
+    buffer[sizeof(buffer) - 1] = '\0';
+
+    char* get = strstr(buffer, "GET /move?board=");
+    if (!get) break;
+    char* board = strchr(get, '=') + 1;
+    if (strlen(board) < N * N) break;
+
+    int layout[N][N] = {0};
+    for (int y = 0; y < N; ++y)
+      for (int x = 0; x < N; ++x) layout[y][x] = CharToRank(*board++);
+
+    Node n(layout);
+    int m;
+    float prob = SuggestMove(n, &m);
+    if (options.verbose) {
+      n.Show();
+      if (m >= 0)
+        printf("%s from %s\n", Board::move_names[m],
+               prob > 0 ? "lookup" : "search");
+    }
+
+    std::string reply(
+        "HTTP/1.1 200 OK\n"
+        "Access-Control-Allow-Origin: *\n"
+        "Content-Type: text/plain\n"
+        "Content-Length: 1\n"
+        "\n");
+    reply += m >= 0 ? Board::move_names[m][0] : 'g';
+
+    if (write(client_socket, reply.c_str(), reply.size()) < 0) break;
+  }
+  close(client_socket);
+  printf("Closed client socket %d\n", client_socket);
+}
+
+void RunServer(int server_port) {
+  // Creating socket file descriptor
+  int server_socket;
+  if ((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == 0) {
+    perror("In socket");
+    exit(EXIT_FAILURE);
+  }
+  int enable = 1;
+  if (setsockopt(server_socket, SOL_SOCKET, SO_REUSEADDR, &enable,
+                 sizeof(enable)) < 0) {
+    perror("In setsockopt");
+    exit(EXIT_FAILURE);
+  }
+
+  struct sockaddr_in address;
+  address.sin_family = AF_INET;
+  address.sin_addr.s_addr = INADDR_ANY;
+  address.sin_port = htons(server_port);
+
+  memset(address.sin_zero, '\0', sizeof address.sin_zero);
+
+  if (bind(server_socket, (struct sockaddr*)&address, sizeof(address)) < 0) {
+    perror("In bind");
+    exit(EXIT_FAILURE);
+  }
+  if (listen(server_socket, 10) < 0) {
+    perror("In listen");
+    exit(EXIT_FAILURE);
+  }
+
+  puts("Server ready");
+  while (true) {
+    const int addrlen = sizeof(address);
+    int client_socket;
+    if ((client_socket = accept(server_socket, (struct sockaddr*)&address,
+                                (socklen_t*)&addrlen)) < 0) {
+      perror("In accept");
+      exit(EXIT_FAILURE);
+    }
+    new std::thread(std::bind(RunAgent, client_socket));
+  }
+
+  close(server_socket);
+}
+
 int main(int argc, char* argv[]) {
   options.seed = time(nullptr);
   options.UpdateMinProbFromDepth();
+  int server_port = 0;
   int c;
-  while ((c = getopt(argc, argv, "d:i:p:vIP:R:T")) != -1) {
+  while ((c = getopt(argc, argv, "d:i:p:vIP:R:S:T")) != -1) {
     switch (c) {
       case 'd':
         options.max_depth = atoi(optarg);
@@ -126,6 +243,9 @@ int main(int argc, char* argv[]) {
       case 'R':
         options.max_rank = atoi(optarg);
         break;
+      case 'S':
+        server_port = atoi(optarg);
+        break;
       case 'T':
         options.tuple_moves = false;
         break;
@@ -136,12 +256,14 @@ int main(int argc, char* argv[]) {
 
   Node::BuildMoveMap();
   Node::BuildScoreMap();
-
-  std::unique_ptr<Tuple10> tuple10;
-  std::unique_ptr<Tuple11> tuple11;
   if (options.tuple_moves) {
     tuple10.reset(new Tuple10);
     tuple11.reset(new Tuple11);
+  }
+
+  if (server_port) {
+    RunServer(server_port);
+    return 0;
   }
 
   long sum_game_scores = 0;
@@ -176,15 +298,7 @@ int main(int argc, char* argv[]) {
       if (options.verbose || options.interactive) n.Show();
 
       int m;
-      float prob = 0;
-      if (tuple11) {
-        prob = tuple11->SuggestMove(n, &m);
-        if (prob < 0.9) prob = 0;
-      }
-      if (prob == 0 && tuple10) {
-        prob = tuple10->SuggestMove(n, &m);
-      }
-      if (prob == 0) n.Search(options.max_depth, &m);
+      float prob = SuggestMove(n, &m);
 
       if (options.interactive) num_moves -= InteractivePlay(&n, &m, prob);
 
@@ -198,9 +312,9 @@ int main(int argc, char* argv[]) {
       if (max_rank == options.max_rank) break;
 
       if (options.interactive)
-        printf("#%d: %s\n", num_moves, Node::move_names[m]);
+        printf("#%d: %s\n", num_moves, Board::move_names[m]);
       else if (options.verbose)
-        printf("#%d: %s from %s\n", num_moves, Node::move_names[m],
+        printf("#%d: %s from %s\n", num_moves, Board::move_names[m],
                prob > 0 ? "lookup" : "search");
       else if (max_rank != prev_max_rank) {
         printf("\r%7d", Node::Tile(max_rank));

@@ -1,7 +1,7 @@
 # 2048-ai
 
 This is a strong AI for the popular game 2048. It reaches the 65536 tile 3% of the
-time, of course, without undos. To my knowledge, this is the first AI that "easily" 
+time, of course, without undos. To my knowledge, this is the first AI that "easily"
 reaches the 65536 tile. Previously [1] reported 1 out of 10,000 attempts.
 
 
@@ -55,14 +55,42 @@ Below are some examples.
 
 # Play 10 games starting game# 2050 with 3-ply search.
 ./2048 -d3 -i10 2050
+```
 
+### Interactive mode
+
+```
 # Play an interactive game in text mode, with the AI suggesting moves.
 ./2048 -I
 ```
 
-In interactive mode, "Space" is the key to accept AI suggestions or you can make 
-moves with other prompted keys. It's fun to mess up with the AI and see how it 
+In interactive mode, "Space" is the key to accept AI suggestions or you can make
+moves with other prompted keys. It's fun to mess up with the AI and see how it
 recovers or dies trying.
+
+### Server mode
+
+```
+# Run the AI in server mode on port 8080.
+./2048 -S 8080
+```
+
+The AI can also run in server mode and provide move suggestions to a client.
+For example, this [2048 clone](https://github.com/macroxue/2048-clone) sends
+GET requests like "http://localhost:8080/move?board=EDC1BA9187611111" to the
+AI server and receives one-character replies like 'u', 'l', 'r', 'd' and 'g',
+which stand for up, left, right, down and game-over respectively. Then the
+clone auto-plays the move suggestions until the game ends.
+
+To try the clone and the AI together,
+ * download both repositories;
+ * build the AI and run it in server mode according to instructions above;
+ * wait until the server shows "Server ready";
+ * open index.html page in the clone's directory with any modern web browser.
+
+The game auto-plays immediately once loaded. When the server is stopped, the
+auto-play also stops. When the server is restarted, auto-play continues after
+the game page is refreshed (e.g. with F5 in the browser).
 
 ## How it works
 
@@ -73,7 +101,7 @@ The AI has two components.
  * Near-optimal lookup for the next move when the board has certain features.
    This is instantaneous and handles the most difficult situations when large tiles
    occupy the board.
-   
+
 The two components work in tandem. The search drives large tiles to the top-left
 corner and the lookup figures out the moves to get the next large tile.
 
@@ -89,7 +117,7 @@ be merged into a 32768 tile.
 ---------------------------------
 |     2 |     2 |     2 |     2 |
 ---------------------------------
-```      
+```
 The goal is to get the new 64 tile right next to the existing 64 tile while
 moving only the bottom row and the right-most column. It turns out that this
 can be achieved nearly 80% of the time. Why? Because one can apply the
@@ -103,7 +131,7 @@ the exploration are saved for future lookups.
 The same idea is extended to have two moving rows and one moving column so
 building the next 512 tile can be from lookups as well. This greatly improves
 the strength and the speed of the AI, at the cost of more memory and more time
-in computing the lookup tables.  Right now, the AI uses roughly 6GB of memory 
+in computing the lookup tables.  Right now, the AI uses roughly 6GB of memory
 to compute the tables and 3.2GB after that.
 
 ## Potential improvements
