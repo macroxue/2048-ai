@@ -88,9 +88,7 @@ To try the clone and the AI together,
  * wait until the server shows "Server ready";
  * open index.html page in the clone's directory with any modern web browser.
 
-The game auto-plays immediately once loaded. When the server is stopped, the
-auto-play also stops. When the server is restarted, auto-play continues after
-the game page is refreshed (e.g. with F5 in the browser).
+The game can auto-play continuously or step by step.
 
 ## How it works
 
