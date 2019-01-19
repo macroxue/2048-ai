@@ -408,7 +408,10 @@ class Tuple {
   std::unique_ptr<CompressedTupleMove[]> compressed_moves;
 };
 
-using Tuple10 = Tuple<1, 1, 1, 10, 1, 1, 1, 9, 10, 9, 8, 8, 8, 8, 8, 8>;
+using Tuple10 = Tuple<1, 1, 1, 10,  // row 0
+                      1, 1, 1, 9,   // row 1
+                      10, 9, 8, 8,  // row 2
+                      8, 8, 8, 8>;  // row 3
 
 template <>
 const int Tuple10::kMaxAnchorRank = 10;
@@ -432,6 +435,8 @@ bool Tuple10::TupleBoard::IsRegular(bool transposed) const {
 
     // Rightmost two columns and bottom row are smaller than anchor rank.
     int anchor_rank = std::min(board[1][0], std::min(board[1][1], board[1][2]));
+    if (board[0][3] > anchor_rank - 1) return false;
+    if (board[1][3] > anchor_rank - 2) return false;
     if (board[2][0] > anchor_rank - 1) return false;
     if (board[2][1] > anchor_rank - 2) return false;
     if (board[2][2] > anchor_rank - 3) return false;
@@ -440,8 +445,6 @@ bool Tuple10::TupleBoard::IsRegular(bool transposed) const {
     if (board[3][1] > anchor_rank - 3) return false;
     if (board[3][2] > anchor_rank - 3) return false;
     if (board[3][3] > anchor_rank - 3) return false;
-    if (board[0][3] > anchor_rank - 1) return false;
-    if (board[1][3] > anchor_rank - 2) return false;
   } else {
     // Top-left 3x2 configuration:
     // (0,0) != (1,0) != (2,0)
@@ -455,6 +458,8 @@ bool Tuple10::TupleBoard::IsRegular(bool transposed) const {
 
     // Bottom two rows and rightmost column are smaller than anchor rank.
     int anchor_rank = std::min(board[0][1], std::min(board[1][1], board[2][1]));
+    if (board[3][0] > anchor_rank - 1) return false;
+    if (board[3][1] > anchor_rank - 2) return false;
     if (board[0][2] > anchor_rank - 1) return false;
     if (board[1][2] > anchor_rank - 2) return false;
     if (board[2][2] > anchor_rank - 3) return false;
@@ -463,8 +468,6 @@ bool Tuple10::TupleBoard::IsRegular(bool transposed) const {
     if (board[1][3] > anchor_rank - 3) return false;
     if (board[2][3] > anchor_rank - 3) return false;
     if (board[3][3] > anchor_rank - 3) return false;
-    if (board[3][0] > anchor_rank - 1) return false;
-    if (board[3][1] > anchor_rank - 2) return false;
   }
   return true;
 }
@@ -498,7 +501,10 @@ bool Tuple10::TupleBoard::IsGoal(bool transposed) const {
   }
 }
 
-using Tuple11 = Tuple<1, 1, 1, 7, 1, 1, 8, 7, 7, 7, 7, 7, 6, 6, 6, 6>;
+using Tuple11 = Tuple<1, 1, 1, 7,   // row 0
+                      1, 1, 8, 7,   // row 1
+                      7, 7, 7, 7,   // row 2
+                      6, 6, 6, 6>;  // row 3
 
 template <>
 const int Tuple11::kMaxAnchorRank = 7;
@@ -525,6 +531,8 @@ bool Tuple11::TupleBoard::IsRegular(bool transposed) const {
     // Rightmost two columns and bottom row are smaller than anchor rank.
     int anchor_rank =
         std::min(kMaxAnchorRank, std::min(board[1][1], board[0][2]));
+    if (board[0][3] > anchor_rank - 1) return false;
+    if (board[1][3] > anchor_rank - 1) return false;
     if (board[2][0] > anchor_rank - 1) return false;
     if (board[2][1] > anchor_rank - 1) return false;
     if (board[2][2] > anchor_rank - 1) return false;
@@ -533,8 +541,6 @@ bool Tuple11::TupleBoard::IsRegular(bool transposed) const {
     if (board[3][1] > anchor_rank - 2) return false;
     if (board[3][2] > anchor_rank - 2) return false;
     if (board[3][3] > anchor_rank - 2) return false;
-    if (board[0][3] > anchor_rank - 1) return false;
-    if (board[1][3] > anchor_rank - 1) return false;
   } else {
     // Top-left 3x2 configuration:
     // (0,0) != (1,0) != (2,0)
@@ -551,6 +557,8 @@ bool Tuple11::TupleBoard::IsRegular(bool transposed) const {
     // Bottom two rows and rightmost column are smaller than anchor rank.
     int anchor_rank =
         std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]));
+    if (board[3][0] > anchor_rank - 1) return false;
+    if (board[3][1] > anchor_rank - 1) return false;
     if (board[0][2] > anchor_rank - 1) return false;
     if (board[1][2] > anchor_rank - 1) return false;
     if (board[2][2] > anchor_rank - 1) return false;
@@ -559,8 +567,6 @@ bool Tuple11::TupleBoard::IsRegular(bool transposed) const {
     if (board[1][3] > anchor_rank - 2) return false;
     if (board[2][3] > anchor_rank - 2) return false;
     if (board[3][3] > anchor_rank - 2) return false;
-    if (board[3][0] > anchor_rank - 1) return false;
-    if (board[3][1] > anchor_rank - 1) return false;
   }
   return true;
 }
