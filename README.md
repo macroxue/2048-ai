@@ -68,6 +68,7 @@ In interactive mode, "Space" is the key to accept AI suggestions or you can make
 moves with other prompted keys. It's fun to mess up with the AI and see how it
 recovers or dies trying.
 
+
 ### Server mode
 
 ```
@@ -88,7 +89,15 @@ To try the clone and the AI together,
  * wait until the server shows "Server ready";
  * open index.html page in the clone's directory with any modern web browser.
 
-The game can auto-play continuously or step by step.
+The game can auto-play continuously or step by step. One can still control the
+game with arrow keys. If AI's tendency of pushing large tiles to the top-left
+corner gets annoying, run the AI in interactive mode instead with the command
+below.
+
+```
+# Run the AI in server mode on port 8080 and enable interactive mode.
+./2048 -S 8080 -I
+```
 
 ## How it works
 
