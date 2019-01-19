@@ -79,6 +79,34 @@ class Tuple {
     return max_prob;
   }
 
+  float Lookup(int v, int* m) const {
+    if (compressed_moves) {
+      *m = compressed_moves[v].move;
+      return compressed_moves[v].Prob();
+    }
+    if (tuple_moves) {
+      *m = tuple_moves[v].move;
+      return tuple_moves[v].Prob();
+    }
+    return 0;
+  }
+
+  void Show() const {
+    for (long i = 0; i < kNumTuples; ++i) {
+      int move;
+      auto prob = Lookup(i, &move);
+      if (prob == 0) continue;
+
+      int tile[kNumTiles];
+      Decode(i, tile);
+
+      printf("%d", tile[0] ? 1 << tile[0] : 0);
+      for (int t = 1; t < kNumTiles; ++t)
+        printf(" %d", tile[t] ? 1 << tile[t] : 0);
+      printf(", %s, %f\n", Board::move_names[move], prob);
+    }
+  }
+
  private:
   class TupleBoard : public Board {
    public:
