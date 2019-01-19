@@ -16,8 +16,8 @@ template <int T0, int T1, int T2, int T3, int T4, int T5, int T6, int T7,
           int T8, int T9, int T10, int T11, int T12, int T13, int T14, int T15>
 class Tuple {
  public:
-  static const long kNumTuples = T0 * T1 * T2 * T3 * T4 * T5 * T6 * T7 * T8 *
-                                 T9 * T10 * T11 * T12 * T13 * T14 * T15;
+  static const long kNumTuples = long(T0) * T1 * T2 * T3 * T4 * T5 * T6 * T7 *
+                                 T8 * T9 * T10 * T11 * T12 * T13 * T14 * T15;
   static const int kNumTiles = (T0 > 1) + (T1 > 1) + (T2 > 1) + (T3 > 1) +
                                (T4 > 1) + (T5 > 1) + (T6 > 1) + (T7 > 1) +
                                (T8 > 1) + (T9 > 1) + (T10 > 1) + (T11 > 1) +
@@ -246,7 +246,7 @@ class Tuple {
     }
 
     float TryMoves() {
-      int v = CompactSmallTiles();
+      auto v = CompactSmallTiles();
       if (!tuple_moves[v].ValidProb()) {
         float max_prob = 0;
         int max_move = 0;
@@ -288,7 +288,7 @@ class Tuple {
         auto anchor_rank = anchor_ranks[i];
         if (anchor_rank <= kMaxAnchorRank && IsRegular(transposed) &&
             !IsGoal(transposed)) {
-          int v = CompactSmallTiles(transposed);
+          auto v = CompactSmallTiles(transposed);
           if (move) {
             *move = compressed_moves[v].move;
             if (transposed) *move = (*move < 2 ? 1 : 5) - *move;
