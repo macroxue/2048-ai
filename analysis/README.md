@@ -18,7 +18,7 @@ make
 ## Snake Chain
 
 Below are a few examples for using the lookup tables with Snake Chain strategy.
-Suppose you are at this position trying to figure how to get a new 64 tile to
+Suppose you are at this position trying to figure out how to get a new 64 tile to
 reach 16384.
 ```
 ---------------------------------
@@ -31,7 +31,7 @@ reach 16384.
 |     0 |     0 |     2 |     2 |
 ---------------------------------
 ```
-To figure the best move, look for the line below in table.snake8.64.
+To find out the best move, look for the line below in table.snake8.64.
 ```
 2 2 2 4 0 0 2 2, right, 0.976849
 ```
