@@ -141,6 +141,14 @@ the strength and the speed of the AI, at the cost of more memory and more time
 in computing the lookup tables.  Right now, the AI uses roughly 6GB of memory
 to compute the tables and 3.2GB after that.
 
+### Analysis
+
+Here is an analysis [comparing Snake Chain and Perimeter Defense Formation
+strategies](https://github.com/macroxue/2048-ai/tree/master/analysis) with
+optimal moves, which are produced by utility programs based on the same
+exhaustive Expectimax algorithm.
+
+
 ## Potential improvements
 
  * The search component has some weakness. Occasionally it gets stuck with the
