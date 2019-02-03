@@ -4,6 +4,11 @@ This is a strong AI for the popular game 2048. It reaches the 65536 tile 3% of t
 time, of course, without undos. To my knowledge, this is the first AI that "easily"
 reaches the 65536 tile. Previously [1] reported 1 out of 10,000 attempts.
 
+Below is a screenshot with [2048 clone](https://github.com/macroxue/2048-clone)
+when the AI was about to build a 32768 tile next to the 65536 tile but died
+unfortunately.
+
+![High Score](https://github.com/macroxue/2048-ai/blob/master/highscore.png)
 
 ## Performance
 
