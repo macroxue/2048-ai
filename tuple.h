@@ -32,9 +32,9 @@ class Tuple {
       printf("done\n");
       return;
     }
-    printf("failed (errno %d)\n", errno);
+    puts(strerror(errno));
 
-    printf("Computing tuple_moves for %ld tuples ...     ", kNumTuples);
+    printf("Computing tuple moves for %ld tuples ...     ", kNumTuples);
     fflush(stdout);
     Compute();
     printf("done\n");
