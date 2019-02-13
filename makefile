@@ -1,7 +1,7 @@
 all: 2048.p 2048 2048.g board_test
 
 SOURCES=board.cc
-HEADERS=node.h board.h cache.h tuple_move.h tuple.h
+HEADERS=node.h board.h cache.h tuple_move.h tuple.h snake.h
 CC_OPTIONS=-std=c++0x -pthread
 RUN_OPTIONS=-d2 -T
 

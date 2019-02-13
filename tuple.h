@@ -23,6 +23,8 @@ class Tuple {
                                (T8 > 1) + (T9 > 1) + (T10 > 1) + (T11 > 1) +
                                (T12 > 1) + (T13 > 1) + (T14 > 1) + (T15 > 1);
   static const int kMaxAnchorRank;
+  static const int kAnchorCol;
+  static const int kAnchorRow;
   static const char kTupleFile[];
 
   Tuple() {
@@ -282,7 +284,8 @@ class Tuple {
     }
 
     float SuggestMove(int* move) const {
-      int anchor_ranks[2] = {board[2][1], board[1][2]};
+      int anchor_ranks[2] = {board[kAnchorCol][kAnchorRow],
+                             board[kAnchorRow][kAnchorCol]};
       for (int i = 0; i < 2; ++i) {
         bool transposed = i;
         auto anchor_rank = anchor_ranks[i];
@@ -416,6 +419,10 @@ using Tuple10 = Tuple<1, 1, 1, 10,  // row 0
 template <>
 const int Tuple10::kMaxAnchorRank = 10;
 template <>
+const int Tuple10::kAnchorCol = 2;
+template <>
+const int Tuple10::kAnchorRow = 1;
+template <>
 const char Tuple10::kTupleFile[] = "tuple_moves.10";
 
 template <>
@@ -508,6 +515,10 @@ using Tuple11 = Tuple<1, 1, 1, 7,   // row 0
 
 template <>
 const int Tuple11::kMaxAnchorRank = 7;
+template <>
+const int Tuple11::kAnchorCol = 2;
+template <>
+const int Tuple11::kAnchorRow = 1;
 template <>
 const char Tuple11::kTupleFile[] = "tuple_moves.11";
 

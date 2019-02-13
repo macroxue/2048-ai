@@ -27,6 +27,7 @@ struct Options {
   int prefill_rank = 0;
   int max_rank = 0;
   bool tuple_moves = true;
+  bool snake_moves = false;
 };
 
 static Options options;

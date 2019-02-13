@@ -104,6 +104,38 @@ below.
 ./2048 -S 8080 -I
 ```
 
+### Training with Snake Chain
+
+Most human players follow [Snake Chain Formation](https://2048masters.com/lessons/)
+because it's easy to grasp, while the AI plays
+[Perimeter Defense Formation](https://2048masters.com/lessons/pdf/training-1/index.html).
+which is superior to Snake Chain.
+
+For training purpose, the AI can also handle Snake Chain when it appears, e.g. with
+the following command. However, be aware that the AI will require 2X resources
+to run, i.e. 16GB of memory and 8GB of disk, and it will take 2X longer to compute
+lookup tables for the very first run.
+
+```
+# Run the AI in server mode on port 8080 and enable handling of Snake Chain.
+./2048 -S 8080 -s
+```
+
+The AI is actually quite good at handling Snake Chain with 70% chance of getting
+32768 tile from the position below.
+
+```
+---------------------------------
+| 16384 |  8192 |  4096 |  2048 |
+---------------------------------
+|     2 |       |       |       |
+---------------------------------
+|       |       |       |       |
+---------------------------------
+|       |       |       |       |
+---------------------------------
+```
+
 ## How it works
 
 The AI has two components.
