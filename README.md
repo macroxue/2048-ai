@@ -121,7 +121,7 @@ lookup tables for the very first run.
 ./2048 -S 8080 -s
 ```
 
-The AI is actually quite good at handling Snake Chain with 70% chance of getting
+The AI is actually quite good at handling Snake Chain with 2/3 chance of getting
 32768 tile from the position below.
 
 ```
