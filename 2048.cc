@@ -119,7 +119,7 @@ float SuggestMove(Node& n, int* m) {
   }
   if (prob == 0 && snake11) {
     prob = snake11->SuggestMove(n, m);
-    if (prob < 0.8) prob = 0;
+    if (prob < 0.5) prob = 0;
   }
   if (prob == 0) {
     if (tuple10) prob = tuple10->SuggestMove(n, m);

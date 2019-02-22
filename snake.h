@@ -83,11 +83,13 @@ bool Snake11::TupleBoard::IsGoal(bool transposed) const {
   if (transposed) {
     int anchor_rank = std::min(kMaxAnchorRank, board[1][0] - 1);
     return board[1][1] == anchor_rank && board[1][2] == anchor_rank - 1 &&
-           (board[1][3] == anchor_rank - 1 || board[1][3] == anchor_rank - 2);
+           (board[1][3] == anchor_rank - 1 || board[1][3] == anchor_rank - 2 ||
+            (board[1][3] == anchor_rank - 3 && board[2][3] == anchor_rank - 3));
   } else {
     int anchor_rank = std::min(kMaxAnchorRank, board[0][1] - 1);
     return board[1][1] == anchor_rank && board[2][1] == anchor_rank - 1 &&
-           (board[3][1] == anchor_rank - 1 || board[3][1] == anchor_rank - 2);
+           (board[3][1] == anchor_rank - 1 || board[3][1] == anchor_rank - 2 ||
+            (board[3][1] == anchor_rank - 3 && board[3][2] == anchor_rank - 3));
   }
 }
 
