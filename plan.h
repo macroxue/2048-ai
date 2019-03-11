@@ -14,17 +14,26 @@ class Plan {
   Suggestion SuggestMove(const Board& board) {
     if (!IsApplicable(board) || IsGoal(board)) return Suggestion{-1, 0};
 
-    if (plan.empty()) {
-      max_rank = board.MaxRank();
-      auto prob = TryMoves(board, 1);
-      printf("Training success rate: %3.1f%%\n", prob * 100);
-      board.Show();
-    }
+    if (plan.empty()) Compute(board);
 
     auto key = CompactBoard(board);
     auto entry = plan.Find(key);
     if (entry) return {entry->Move(), entry->Prob()};
+#if 1
     return {0, 0};
+#else
+    Compute(board);
+    entry = plan.Find(key);
+    return {entry->Move(), entry->Prob()};
+#endif
+  }
+
+ protected:
+  void Compute(const Board& board) {
+    max_rank = board.MaxRank();
+    auto prob = TryMoves(board, 1);
+    printf("Training success rate: %3.1f%%\n", prob * 100);
+    board.Show();
   }
 
   float TryMoves(const Board& board, int depth) {
@@ -123,6 +132,13 @@ class BlockPlan : public Plan {
     // x  x  x  x
     if (board[3][1] == anchor_rank &&
         (board[3][0] == anchor_rank || board[3][2] == anchor_rank))
+      return true;
+    // x 13 12  x
+    // x  9  8  7
+    // x  x  6  6
+    // x  x  x  6
+    if (board[3][1] == anchor_rank && board[3][2] == anchor_rank - 1 &&
+        (board[2][2] == anchor_rank - 1 || board[3][3] == anchor_rank - 1))
       return true;
 
     return false;
