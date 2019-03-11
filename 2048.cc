@@ -12,7 +12,7 @@
 #include <vector>
 
 #include "node.h"
-#include "snake.h"
+#include "plan.h"
 #include "tuple.h"
 
 struct Snapshot {
@@ -108,8 +108,8 @@ int InteractivePlay(Node* n, int* move, float prob) {
 
 std::unique_ptr<Tuple10> tuple10;
 std::unique_ptr<Tuple11> tuple11;
-std::unique_ptr<Snake9> snake9;
-std::unique_ptr<Snake11> snake11;
+std::unique_ptr<BlockPlan> block_plan;
+std::unique_ptr<LinePlan> line_plan;
 
 float SuggestMove(Node& n, int* m) {
   float prob = 0;
@@ -117,20 +117,18 @@ float SuggestMove(Node& n, int* m) {
     prob = tuple11->SuggestMove(n, m);
     if (prob < 0.9) prob = 0;
   }
-  if (prob == 0 && snake11) {
-    prob = snake11->SuggestMove(n, m);
-    if (prob < 0.5) prob = 0;
+  if (prob == 0 && tuple10) {
+    prob = tuple10->SuggestMove(n, m);
   }
-  if (prob == 0) {
-    if (tuple10) prob = tuple10->SuggestMove(n, m);
-    if (snake9) {
-      int m2;
-      float prob2 = snake9->SuggestMove(n, &m2);
-      if (prob2 * prob2 >= prob) {
-        prob = prob2;
-        *m = m2;
-      }
-    }
+  if (prob == 0 && line_plan) {
+    auto suggestion = line_plan->SuggestMove(n);
+    *m = suggestion.move;
+    prob = suggestion.prob;
+  }
+  if (prob == 0 && block_plan) {
+    auto suggestion = block_plan->SuggestMove(n);
+    *m = suggestion.move;
+    prob = suggestion.prob;
   }
   if (prob == 0) n.Search(options.max_depth, m);
   return prob;
@@ -165,9 +163,14 @@ void RunAgent(int client_socket) {
     float prob = SuggestMove(n, &m);
     if (options.verbose) {
       n.Show();
-      if (m >= 0)
-        printf("%s from %s\n", Board::move_names[m],
+      if (m >= 0) {
+        printf("%5s from %s", Board::move_names[m],
                prob > 0 ? "lookup" : "search");
+        if (prob > 0)
+          printf(", prob %f\n", prob);
+        else
+          printf("\n");
+      }
     }
 
     std::string reply(
@@ -234,7 +237,7 @@ int main(int argc, char* argv[]) {
   options.UpdateMinProbFromDepth();
   int server_port = 0;
   int c;
-  while ((c = getopt(argc, argv, "d:i:p:svIP:R:S:T")) != -1) {
+  while ((c = getopt(argc, argv, "d:i:p:vIP:R:S:T")) != -1) {
     switch (c) {
       case 'd':
         options.max_depth = atoi(optarg);
@@ -245,9 +248,6 @@ int main(int argc, char* argv[]) {
         break;
       case 'p':
         options.min_prob = atof(optarg);
-        break;
-      case 's':
-        options.snake_moves = true;
         break;
       case 'v':
         options.verbose = true;
@@ -277,10 +277,9 @@ int main(int argc, char* argv[]) {
   if (options.tuple_moves) {
     tuple10.reset(new Tuple10);
     tuple11.reset(new Tuple11);
-  }
-  if (options.snake_moves) {
-    snake9.reset(new Snake9);
-    snake11.reset(new Snake11);
+  } else {
+    block_plan.reset(new BlockPlan);
+    // line_plan.reset(new LinePlan);
   }
 
   if (server_port) {
@@ -336,7 +335,7 @@ int main(int argc, char* argv[]) {
       if (options.interactive)
         printf("#%d: %s\n", num_moves, Board::move_names[m]);
       else if (options.verbose)
-        printf("#%d: %s from %s\n", num_moves, Board::move_names[m],
+        printf("#%d: %5s from %s\n", num_moves, Board::move_names[m],
                prob > 0 ? "lookup" : "search");
       else if (max_rank != prev_max_rank) {
         printf("\r%7d", Node::Tile(max_rank));

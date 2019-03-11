@@ -71,7 +71,7 @@ class Tuple {
     float max_prob = 0;
     for (int d = 0; d < 4; ++d) {
       if (d > 0) b.Rotate();
-      int m;
+      int m = 0;
       auto prob = b.SuggestMove(&m);
       if (max_prob < prob) {
         max_prob = prob;

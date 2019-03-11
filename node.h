@@ -27,7 +27,6 @@ struct Options {
   int prefill_rank = 0;
   int max_rank = 0;
   bool tuple_moves = true;
-  bool snake_moves = false;
 };
 
 static Options options;
@@ -48,13 +47,6 @@ class Node : public Board {
   static int TileScore(int r) { return r << r; }
   static int Tile(int r) { return r ? 1 << r : 0; }
   int Tile(int x, int y) const { return Tile(board[x][y]); }
-
-  int MaxRank() const {
-    int max_rank = 0;
-    for (int y = 0; y < N; ++y)
-      for (int x = 0; x < N; ++x) max_rank = std::max(max_rank, board[x][y]);
-    return max_rank;
-  }
 
   int MaxTile() const { return Tile(MaxRank()); }
 
@@ -218,8 +210,13 @@ class Node : public Board {
   int Search(int depth, int* best_move) {
     int max_tile_score = TileScore(MaxRank());
     int score = Evaluate();
-    pass_score = score < 0 ? -INT_MAX : max_tile_score * 2;
-    game_over_score = -std::max(1 << 17, max_tile_score * 2);
+    if (options.tuple_moves) {
+      pass_score = score < 0 ? -INT_MAX : max_tile_score * 2;
+      game_over_score = -std::max(1 << 17, max_tile_score * 2);
+    } else {
+      pass_score = -INT_MAX;
+      game_over_score = -1 << 22;
+    }
     return TryAllMoves(depth, 1, best_move);
   }
 

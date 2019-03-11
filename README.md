@@ -1,4 +1,4 @@
-# 2048-ai
+# 2048 - ai
 
 This is a strong AI for the popular game 2048. It reaches the 65536 tile 3% of the
 time, of course, without undos. To my knowledge, this is the first AI that "easily"
@@ -111,30 +111,35 @@ because it's easy to grasp, while the AI plays
 [Perimeter Defense Formation](https://2048masters.com/lessons/pdf/training-1/index.html).
 which is superior to Snake Chain.
 
-For training purpose, the AI can also handle Snake Chain when it appears, e.g. with
-the following command. However, be aware that the AI will require 2X resources
-to run, i.e. 16GB of memory and 8GB of disk, and it will take 2X longer to compute
-lookup tables for the very first run.
+For training purpose, the AI can also handle Snake Chain with the following
+command.
 
 ```
-# Run the AI in server mode on port 8080 and enable handling of Snake Chain.
-./2048 -S 8080 -s
+# Run the AI in server mode on port 8080 and enable training with Snake Chain.
+./2048 -S 8080 -T -v
 ```
 
-The AI is actually quite good at handling Snake Chain with 2/3 chance of getting
-32768 tile from the position below.
+In training mode, the AI conducts exhaustive Expectimax search on the very
+first board and keeps all intermediate boards for future lookups. It may take a
+few minutes to finish the search. The AI can't handle all boards optimally but
+its success rate is 86% with boards like below where x's are small tiles.
 
 ```
 ---------------------------------
 | 16384 |  8192 |  4096 |  2048 |
 ---------------------------------
-|     2 |       |       |       |
+|  1024 |   512 |   256 |     x |
 ---------------------------------
-|       |       |       |       |
+|     x |     x |     x |     x |
 ---------------------------------
-|       |       |       |       |
+|     x |     x |     x |     x |
 ---------------------------------
 ```
+
+If you want to change the starting board, the AI must be restarted so it can
+recompute the lookup table for the new starting board. Also be aware that the
+AI may consume a ton of memory when the board has more small tiles than the
+example above.
 
 ## How it works
 
