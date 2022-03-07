@@ -1,3 +1,4 @@
+#include <ctype.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,6 +9,7 @@
 #include <unistd.h>
 
 #include <functional>
+#include <string>
 #include <thread>
 #include <vector>
 

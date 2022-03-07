@@ -8,8 +8,6 @@ struct TupleMove {
   void SetProb(float p) { prob = p * 1e9; }
 
   unsigned int move : 2;
-
- private:
   unsigned int prob : 30;
 };
 #else
@@ -19,8 +17,6 @@ struct TupleMove {
   void SetProb(float p) { prob = p * float(16000.0); }
 
   unsigned short move : 2;
-
- private:
   unsigned short prob : 14;
 };
 #endif
@@ -34,8 +30,6 @@ struct CompressedTupleMove {
   }
 
   unsigned char move : 2;
-
- private:
   unsigned char prob : 6;
 };
 
