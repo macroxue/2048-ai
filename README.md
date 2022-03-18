@@ -77,11 +77,11 @@ recovers or dies trying.
 ### Server mode
 
 ```
-# Run the AI in server mode on port 8080.
-./2048 -S 8080
+# Run the AI in server mode on port 8080 and enable interactive mode.
+./2048 -S 8080 -I
 ```
 
-The AI can also run in server mode and provide move suggestions to a client.
+The AI can also run in server mode to suggest moves and analyze user moves.
 For example, this [2048 clone](https://github.com/macroxue/2048-clone) sends
 GET requests like "http://localhost:8080/move?board=EDC1BA9187611111" to the
 AI server and receives one-character replies like 'u', 'l', 'r', 'd' and 'g',
@@ -94,15 +94,12 @@ To try the clone and the AI together,
  * wait until the server shows "Server ready";
  * open index.html page in the clone's directory with any modern web browser.
 
-The game can auto-play continuously or step by step. One can still control the
-game with arrow keys. If AI's tendency of pushing large tiles to the top-left
-corner gets annoying, run the AI in interactive mode instead with the command
-below.
+The game can auto-play continuously or step by step. The user can still control
+the game with arrow keys and such moves are sent to the AI for analysis.  When
+a user move is significantly worse than the move that the AI would take, the
+server will point out the better move in the terminal. The sensitivity is set
+to 0.9 by default and can be changed by the `-O` flag.
 
-```
-# Run the AI in server mode on port 8080 and enable interactive mode.
-./2048 -S 8080 -I
-```
 
 ### Training with Snake Chain
 

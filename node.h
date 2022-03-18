@@ -24,6 +24,7 @@ struct Options {
   double min_prob = 0.001;
   bool verbose = false;
   bool interactive = false;
+  float optimality = 0.9;
   int prefill_rank = 0;
   int max_rank = 0;
   bool tuple_moves = true;

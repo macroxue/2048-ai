@@ -1,6 +1,7 @@
 #ifndef TUPLE_H
 #define TUPLE_H
 
+#include <errno.h>
 #include <memory>
 
 #include "board.h"
