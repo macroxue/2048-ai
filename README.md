@@ -6,7 +6,9 @@ reaches the 65536 tile. Previously [1] reported 1 out of 10,000 attempts.
 
 Below is a screenshot with [2048 clone](https://github.com/macroxue/2048-clone)
 when the AI was about to build a 32768 tile next to the 65536 tile but died
-unfortunately.
+unfortunately. In text mode, the AI also achieved the high score of 1556664
+with a 65536 tile and a 32768 tile. Read on to see how to recreate the high
+score.
 
 ![High Score](https://github.com/macroxue/2048-ai/blob/master/highscore.png)
 
@@ -60,6 +62,9 @@ Below are some examples.
 
 # Play 10 games starting game# 2050 with 3-ply search.
 ./2048 -d3 -i10 2050
+
+# Play game# 2833 with 7-ply search. You will see the 1556664 high score.
+./2048 -d7 2833
 ```
 
 ### Interactive mode
