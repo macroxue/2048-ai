@@ -89,10 +89,10 @@ which stand for up, left, right, down and game-over respectively. Then the
 clone auto-plays the move suggestions until the game ends.
 
 To try the clone and the AI together,
- * download both repositories;
+ * download this repository;
  * build the AI and run it in server mode according to instructions above;
  * wait until the server shows "Server ready";
- * open index.html page in the clone's directory with any modern web browser.
+ * open [this link](https://macroxue.github.io/2048-clone) to play.
 
 The game can auto-play continuously or step by step. The user can still control
 the game with arrow keys and such moves are sent to the AI for analysis.  When
