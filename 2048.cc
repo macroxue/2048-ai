@@ -8,6 +8,7 @@
 #include <termios.h>
 #include <unistd.h>
 
+#include <fstream>
 #include <functional>
 #include <set>
 #include <string>
@@ -135,7 +136,7 @@ struct Valuation {
   float value;
 };
 
-Valuation SuggestMove(Node& n, int* m) {
+Valuation SuggestMove(Node& n, int* m, bool lookup_only = false) {
   float prob = 0;
   if (prob == 0 && tuple11) {
     prob = tuple11->SuggestMove(n, m);
@@ -157,6 +158,9 @@ Valuation SuggestMove(Node& n, int* m) {
     *m = suggestion.move;
     prob = suggestion.prob;
     if (prob > 0) return {Valuation::kBlockPlan, prob};
+  }
+  if (lookup_only) {
+    return {Valuation::kSearch, 0};
   }
   return {Valuation::kSearch, (float)n.Search(options.max_depth, m)};
 }
@@ -188,9 +192,9 @@ float RollOutWithTuple(Node &n, Valuation::Type type) {
   return total_prob;
 }
 
-void AnalyzeMove(Node& n, int move) {
+void AnalyzeMove(Node& n, int move, bool lookup_only = false) {
   int best_move;
-  auto best_valuation = SuggestMove(n, &best_move);
+  auto best_valuation = SuggestMove(n, &best_move, lookup_only);
   if (move == best_move) return;
 
   Node n1 = n;
@@ -201,16 +205,65 @@ void AnalyzeMove(Node& n, int move) {
       best_valuation.type == Valuation::kTuple10) {
     valuation.value = RollOutWithTuple(n1, best_valuation.type);
   } else {
+    if (lookup_only) return;
     valuation.value = n1.TryAllTiles(options.max_depth - 1, 1);
   }
   bool suboptimal = (best_valuation.value >= 0)
     ? (valuation.value < options.optimality * best_valuation.value)
     : (valuation.value < 1 / options.optimality * best_valuation.value);
-  if (suboptimal) {
+  if (suboptimal &&
+      (!lookup_only ||
+       (valuation.type != Valuation::kSearch && valuation.value > 0))) {
     n.Show();
     printf("***** %s %.3f < %s %.3f *****\n",
            Board::move_names[move], valuation.prob(n.MaxRank()),
            Board::move_names[best_move], best_valuation.prob(n.MaxRank()));
+  }
+}
+
+void AnalyzeLog(char* log_file) {
+  options.interactive = true;
+
+  // The table for converting the code defined by https://2048league.ml/replay/.
+  static const char* ascii[128] = {
+      " ", "!", "\"", "#", "$",  "%", "&", "'", "(", ")", "*", "+", ",", "-",
+      ".", "/", "0",  "1", "2",  "3", "4", "5", "6", "7", "8", "9", ":", ";",
+      "<", "=", ">",  "?", "@",  "A", "B", "C", "D", "E", "F", "G", "H", "I",
+      "J", "K", "L",  "M", "N",  "O", "P", "Q", "R", "S", "T", "U", "V", "W",
+      "X", "Y", "Z",  "[", "\\", "]", "^", "_", "`", "a", "b", "c", "d", "e",
+      "f", "g", "h",  "i", "j",  "k", "l", "m", "n", "o", "p", "q", "r", "s",
+      "t", "u", "v",  "w", "x",  "y", "z", "{", "|", "}", "~", "Ç", "ü", "é",
+      "â", "ä", "à",  "å", "ç",  "ê", "ë", "è", "ï", "î", "ì", "Ä", "Å", "É",
+      "æ", "Æ", "ô",  "ö", "ò",  "û", "ù", "ÿ", "Ö", "Ü", "ø", "£", "Ø", "×",
+      "ƒ", "á"};
+
+  std::fstream file(log_file);
+  std::string log((std::istreambuf_iterator<char>(file)),
+                  std::istreambuf_iterator<char>());
+  if (log.empty()) {
+    printf("Log file %s doesn't exist.\n", log_file);
+    exit(-1);
+  }
+
+  Node n;
+  int num_tiles = 0;
+  for (size_t i = 0; i < log.size(); ++num_tiles) {
+    size_t code = 0;
+    for (; code < sizeof(ascii) / sizeof(ascii[0]); ++code) {
+      if (strncmp(log.c_str() + i, ascii[code], strlen(ascii[code])) == 0) {
+        i += strlen(ascii[code]);
+        break;
+      }
+    }
+    if (num_tiles >= 2) {
+      int m = "0231"[code / 32 % 4] - '0';
+      AnalyzeMove(n, m, /*lookup_only*/true);
+      bool moved = (n.*Node::moves[m])();
+      if (!moved) break;
+    }
+    auto x = code % 16 / 4, y = code % 16 % 4;
+    bool is_four = code / 16 % 2;
+    n.AddTile(x, y, is_four);
   }
 }
 
@@ -330,9 +383,10 @@ void RunServer(int server_port) {
 int main(int argc, char* argv[]) {
   options.seed = time(nullptr);
   options.UpdateMinProbFromDepth();
+  char* log_file = nullptr;
   int server_port = 0;
   int c;
-  while ((c = getopt(argc, argv, "d:i:p:vIO:P:R:S:T")) != -1) {
+  while ((c = getopt(argc, argv, "d:i:p:vIL:O:P:R:S:T")) != -1) {
     switch (c) {
       case 'd':
         options.max_depth = atoi(optarg);
@@ -349,6 +403,9 @@ int main(int argc, char* argv[]) {
         break;
       case 'I':
         options.interactive = true;
+        break;
+      case 'L':
+        log_file = optarg;
         break;
       case 'O':
         options.optimality = atof(optarg);
@@ -380,6 +437,10 @@ int main(int argc, char* argv[]) {
     // line_plan.reset(new LinePlan);
   }
 
+  if (log_file) {
+    AnalyzeLog(log_file);
+    return 0;
+  }
   if (server_port) {
     RunServer(server_port);
     return 0;

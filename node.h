@@ -126,6 +126,14 @@ class Node : public Board {
     return true;
   }
 
+  void AddTile(int x, int y, bool is_four) {
+    assert(board[x][y] == 0);
+    rand_x = x;
+    rand_y = y;
+    board[x][y] = is_four ? 2 : 1;
+    if (is_four) ++num_4_tiles;
+  }
+
   int Row(int y) const {
     int v = 0;
     for (int x = 0; x < N; ++x) v = v * 32 + board[x][y];

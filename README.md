@@ -106,6 +106,28 @@ a user move is significantly worse than the move that the AI would take, the
 server will point out the better move in the terminal. The sensitivity is set
 to 0.9 by default and can be changed by the `-O` flag.
 
+### Analyzing play logs from 2048league
+
+The program can quickly analyze DPDF moves in the log and point out improvements.
+For example, the command below takes moves in `game.txt` and shows all DPDF moves
+that are less than 95% optimal.
+
+```
+./2048 -L game.txt -O 0.95
+...
+---------------------------------
+|       | > 2 < |     2 |     8 |
+---------------------------------
+|     4 |    64 |   128 |   256 |
+---------------------------------
+|    16 |   512 | 16384 |  2048 |
+---------------------------------
+|    32 |  1024 |  8192 |  4096 |
+---------------------------------
+score 387544 max 16384 sum 32768
+***** left 0.786 < up 1.000 *****
+...
+```
 
 ### Training with Snake Chain
 
