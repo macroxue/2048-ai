@@ -40,6 +40,7 @@ reported 69% rate of reaching the 32768 tile but never the 65536 tile.
 
 ## How to build
 ```
+sudo apt install g++
 make
 ```
 

@@ -110,6 +110,13 @@ class Tuple {
     }
   }
 
+  void Query(int index[]) const {
+    TupleBoard b;
+    b.SetSmallTiles(index);
+    auto t = tuple_moves[b.CompactSmallTiles()];
+    printf("%s %.3f\n", t.Prob() ? Board::move_names[t.move] : ":(", t.Prob());
+  }
+
  private:
   class TupleBoard : public Board {
    public:

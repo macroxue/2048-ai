@@ -15,6 +15,21 @@ make
 ./pdf8 256 > table.pdf8.256
 ```
 
+There is also a DPDF version. Since DPDF has too many positions, the usage is
+changed to online query instead and the lookup tables are not saved to files.
+You enter a position at the ">" prompt and the program outputs the best move
+and its probability of success. When you're done, type Control-C or Control-D
+to exit the program. Warning: DPDF-256 requires 2GB of free memory and DPDF-512
+7GB.
+```
+sudo apt install libreadline-dev
+make dpdf
+./dpdf 64
+./dpdf 128
+./dpdf 256
+./dpdf 512
+```
+
 ## Snake Chain
 
 Below are a few examples for using the lookup tables with Snake Chain strategy.
