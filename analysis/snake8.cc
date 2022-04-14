@@ -11,7 +11,7 @@ template <>
 const int Snake64::kMaxAnchorRank = 6;
 
 template <>
-bool Snake64::TupleBoard::IsRegular(bool transposed) const {
+bool Snake64::TupleBoard::IsRegular() const {
   // Rightmost column and bottom row are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[0][2] > anchor_rank - 1) return false;
@@ -26,7 +26,7 @@ bool Snake64::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Snake64::TupleBoard::IsGoal(bool transposed) const {
+bool Snake64::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if (board[3][2] == anchor_rank - 1 &&
       (board[2][2] == anchor_rank - 1 || board[3][3] == anchor_rank - 1))
@@ -51,7 +51,7 @@ template <>
 const int Snake128::kMaxAnchorRank = 7;
 
 template <>
-bool Snake128::TupleBoard::IsRegular(bool transposed) const {
+bool Snake128::TupleBoard::IsRegular() const {
   // Rightmost column and bottom row are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[0][2] > anchor_rank - 1) return false;
@@ -66,7 +66,7 @@ bool Snake128::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Snake128::TupleBoard::IsGoal(bool transposed) const {
+bool Snake128::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if (board[3][2] == anchor_rank - 1 &&
       (board[2][2] == anchor_rank - 1 || board[3][3] == anchor_rank - 1))
@@ -91,7 +91,7 @@ template <>
 const int Snake256::kMaxAnchorRank = 8;
 
 template <>
-bool Snake256::TupleBoard::IsRegular(bool transposed) const {
+bool Snake256::TupleBoard::IsRegular() const {
   // Rightmost column and bottom row are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[0][2] > anchor_rank - 1) return false;
@@ -106,7 +106,7 @@ bool Snake256::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Snake256::TupleBoard::IsGoal(bool transposed) const {
+bool Snake256::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if (board[3][2] == anchor_rank - 1 &&
       (board[2][2] == anchor_rank - 1 || board[3][3] == anchor_rank - 1))

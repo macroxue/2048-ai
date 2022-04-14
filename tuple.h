@@ -165,48 +165,29 @@ class Tuple {
       if (T15 > 1) board[3][3] = tile[i++];
     }
 
-    long CompactSmallTiles(bool transposed = false) const {
+    long CompactSmallTiles() const {
       long v = 0;
-      if (transposed) {
-        if (T0 > 1) v = v * T0 + board[0][0];
-        if (T1 > 1) v = v * T1 + board[0][1];
-        if (T2 > 1) v = v * T2 + board[0][2];
-        if (T3 > 1) v = v * T3 + board[0][3];
-        if (T4 > 1) v = v * T4 + board[1][0];
-        if (T5 > 1) v = v * T5 + board[1][1];
-        if (T6 > 1) v = v * T6 + board[1][2];
-        if (T7 > 1) v = v * T7 + board[1][3];
-        if (T8 > 1) v = v * T8 + board[2][0];
-        if (T9 > 1) v = v * T9 + board[2][1];
-        if (T10 > 1) v = v * T10 + board[2][2];
-        if (T11 > 1) v = v * T11 + board[2][3];
-        if (T12 > 1) v = v * T12 + board[3][0];
-        if (T13 > 1) v = v * T13 + board[3][1];
-        if (T14 > 1) v = v * T14 + board[3][2];
-        if (T15 > 1) v = v * T15 + board[3][3];
-      } else {
-        if (T0 > 1) v = v * T0 + board[0][0];
-        if (T1 > 1) v = v * T1 + board[1][0];
-        if (T2 > 1) v = v * T2 + board[2][0];
-        if (T3 > 1) v = v * T3 + board[3][0];
-        if (T4 > 1) v = v * T4 + board[0][1];
-        if (T5 > 1) v = v * T5 + board[1][1];
-        if (T6 > 1) v = v * T6 + board[2][1];
-        if (T7 > 1) v = v * T7 + board[3][1];
-        if (T8 > 1) v = v * T8 + board[0][2];
-        if (T9 > 1) v = v * T9 + board[1][2];
-        if (T10 > 1) v = v * T10 + board[2][2];
-        if (T11 > 1) v = v * T11 + board[3][2];
-        if (T12 > 1) v = v * T12 + board[0][3];
-        if (T13 > 1) v = v * T13 + board[1][3];
-        if (T14 > 1) v = v * T14 + board[2][3];
-        if (T15 > 1) v = v * T15 + board[3][3];
-      }
+      if (T0 > 1) v = v * T0 + board[0][0];
+      if (T1 > 1) v = v * T1 + board[1][0];
+      if (T2 > 1) v = v * T2 + board[2][0];
+      if (T3 > 1) v = v * T3 + board[3][0];
+      if (T4 > 1) v = v * T4 + board[0][1];
+      if (T5 > 1) v = v * T5 + board[1][1];
+      if (T6 > 1) v = v * T6 + board[2][1];
+      if (T7 > 1) v = v * T7 + board[3][1];
+      if (T8 > 1) v = v * T8 + board[0][2];
+      if (T9 > 1) v = v * T9 + board[1][2];
+      if (T10 > 1) v = v * T10 + board[2][2];
+      if (T11 > 1) v = v * T11 + board[3][2];
+      if (T12 > 1) v = v * T12 + board[0][3];
+      if (T13 > 1) v = v * T13 + board[1][3];
+      if (T14 > 1) v = v * T14 + board[2][3];
+      if (T15 > 1) v = v * T15 + board[3][3];
       return v;
     }
 
-    bool IsGoal(bool transposed = false) const;
-    bool IsRegular(bool transposed = false) const;
+    bool IsGoal() const;
+    bool IsRegular() const;
 
     bool HasSameTops(const TupleBoard& parent) const {
       if (T0 == 1 && board[0][0] != parent.board[0][0]) return false;
@@ -291,21 +272,27 @@ class Tuple {
         for (int y = 0; y < N; ++y) board[x][y] = rotated[x][y];
     }
 
-    float SuggestMove(int* move) const {
+    void Transpose() {
+      for (int x = 0; x < N; ++x)
+        for (int y = x + 1; y < N; ++y) std::swap(board[x][y], board[y][x]);
+    }
+
+    float SuggestMove(int* move) {
       int anchor_ranks[2] = {board[kAnchorCol][kAnchorRow],
                              board[kAnchorRow][kAnchorCol]};
       for (int i = 0; i < 2; ++i) {
         bool transposed = i;
         auto anchor_rank = anchor_ranks[i];
-        if (anchor_rank <= kMaxAnchorRank && IsRegular(transposed) &&
-            !IsGoal(transposed)) {
-          auto v = CompactSmallTiles(transposed);
+        if (anchor_rank <= kMaxAnchorRank && IsRegular() && !IsGoal()) {
+          auto v = CompactSmallTiles();
           if (move) {
             *move = compressed_moves[v].move;
             if (transposed) *move = (*move < 2 ? 1 : 5) - *move;
           }
+          if (transposed) Transpose();
           return compressed_moves[v].Prob();
         }
+        Transpose();
       }
       return 0;
     }
@@ -434,86 +421,45 @@ template <>
 const char Tuple10::kTupleFile[] = "tuple_moves.10";
 
 template <>
-bool Tuple10::TupleBoard::IsRegular(bool transposed) const {
-  if (transposed) {
-    // Top-left 2x3 configuration:
-    // (0,0) != (1,0)
-    //  !=       !=
-    // (0,1) != (1,1)
-    //  !=       !=
-    // (0,2) >  (1,2)
-    if (board[0][0] == board[0][1] || board[0][1] == board[0][2]) return false;
-    if (board[1][0] == board[1][1] || board[1][1] == board[1][2]) return false;
-    if (board[0][0] == board[1][0]) return false;
-    if (board[0][1] == board[1][1]) return false;
-    if (board[0][2] <= board[1][2]) return false;
+bool Tuple10::TupleBoard::IsRegular() const {
+  // Top-left 3x2 configuration:
+  // (0,0) != (1,0) != (2,0)
+  //  !=       !=        V
+  // (0,1) != (1,1) != (2,1)
+  if (board[0][0] == board[1][0] || board[1][0] == board[2][0]) return false;
+  if (board[0][1] == board[1][1] || board[1][1] == board[2][1]) return false;
+  if (board[0][0] == board[0][1]) return false;
+  if (board[1][0] == board[1][1]) return false;
+  if (board[2][0] <= board[2][1]) return false;
 
-    // Rightmost two columns and bottom row are smaller than anchor rank.
-    int anchor_rank = std::min(board[1][0], std::min(board[1][1], board[1][2]));
-    if (board[0][3] > anchor_rank - 1) return false;
-    if (board[1][3] > anchor_rank - 2) return false;
-    if (board[2][0] > anchor_rank - 1) return false;
-    if (board[2][1] > anchor_rank - 2) return false;
-    if (board[2][2] > anchor_rank - 3) return false;
-    if (board[2][3] > anchor_rank - 3) return false;
-    if (board[3][0] > anchor_rank - 3) return false;
-    if (board[3][1] > anchor_rank - 3) return false;
-    if (board[3][2] > anchor_rank - 3) return false;
-    if (board[3][3] > anchor_rank - 3) return false;
-  } else {
-    // Top-left 3x2 configuration:
-    // (0,0) != (1,0) != (2,0)
-    //  !=       !=        V
-    // (0,1) != (1,1) != (2,1)
-    if (board[0][0] == board[1][0] || board[1][0] == board[2][0]) return false;
-    if (board[0][1] == board[1][1] || board[1][1] == board[2][1]) return false;
-    if (board[0][0] == board[0][1]) return false;
-    if (board[1][0] == board[1][1]) return false;
-    if (board[2][0] <= board[2][1]) return false;
-
-    // Bottom two rows and rightmost column are smaller than anchor rank.
-    int anchor_rank = std::min(board[0][1], std::min(board[1][1], board[2][1]));
-    if (board[3][0] > anchor_rank - 1) return false;
-    if (board[3][1] > anchor_rank - 2) return false;
-    if (board[0][2] > anchor_rank - 1) return false;
-    if (board[1][2] > anchor_rank - 2) return false;
-    if (board[2][2] > anchor_rank - 3) return false;
-    if (board[3][2] > anchor_rank - 3) return false;
-    if (board[0][3] > anchor_rank - 3) return false;
-    if (board[1][3] > anchor_rank - 3) return false;
-    if (board[2][3] > anchor_rank - 3) return false;
-    if (board[3][3] > anchor_rank - 3) return false;
-  }
+  // Bottom two rows and rightmost column are smaller than anchor rank.
+  int anchor_rank = std::min(board[0][1], std::min(board[1][1], board[2][1]));
+  if (board[3][0] > anchor_rank - 1) return false;
+  if (board[3][1] > anchor_rank - 2) return false;
+  if (board[0][2] > anchor_rank - 1) return false;
+  if (board[1][2] > anchor_rank - 2) return false;
+  if (board[2][2] > anchor_rank - 3) return false;
+  if (board[3][2] > anchor_rank - 3) return false;
+  if (board[0][3] > anchor_rank - 3) return false;
+  if (board[1][3] > anchor_rank - 3) return false;
+  if (board[2][3] > anchor_rank - 3) return false;
+  if (board[3][3] > anchor_rank - 3) return false;
   return true;
 }
 
 template <>
-bool Tuple10::TupleBoard::IsGoal(bool transposed) const {
-  if (transposed) {
-    int anchor_rank = std::min(board[1][0], std::min(board[1][1], board[1][2]));
-    return (board[2][0] == anchor_rank - 1 && board[2][1] == anchor_rank - 2 &&
-            ((board[2][2] == anchor_rank - 3 &&
-              (board[3][2] == anchor_rank - 3 ||
-               board[2][3] == anchor_rank - 3)) ||
-             (board[3][1] == anchor_rank - 3 &&
-              (board[3][0] == anchor_rank - 3 ||
-               board[3][2] == anchor_rank - 3)))) ||
-           (board[0][3] == anchor_rank - 1 && board[1][3] == anchor_rank - 2 &&
-            board[2][3] == anchor_rank - 3 &&
-            (board[2][2] == anchor_rank - 3 || board[3][3] == anchor_rank - 3));
-  } else {
-    int anchor_rank = std::min(board[0][1], std::min(board[1][1], board[2][1]));
-    return (board[0][2] == anchor_rank - 1 && board[1][2] == anchor_rank - 2 &&
-            ((board[2][2] == anchor_rank - 3 &&
-              (board[2][3] == anchor_rank - 3 ||
-               board[3][2] == anchor_rank - 3)) ||
-             (board[1][3] == anchor_rank - 3 &&
-              (board[0][3] == anchor_rank - 3 ||
-               board[2][3] == anchor_rank - 3)))) ||
-           (board[3][0] == anchor_rank - 1 && board[3][1] == anchor_rank - 2 &&
-            board[3][2] == anchor_rank - 3 &&
-            (board[2][2] == anchor_rank - 3 || board[3][3] == anchor_rank - 3));
-  }
+bool Tuple10::TupleBoard::IsGoal() const {
+  int anchor_rank = std::min(board[0][1], std::min(board[1][1], board[2][1]));
+  return (board[0][2] == anchor_rank - 1 && board[1][2] == anchor_rank - 2 &&
+          ((board[2][2] == anchor_rank - 3 &&
+            (board[2][3] == anchor_rank - 3 ||
+             board[3][2] == anchor_rank - 3)) ||
+           (board[1][3] == anchor_rank - 3 &&
+            (board[0][3] == anchor_rank - 3 ||
+             board[2][3] == anchor_rank - 3)))) ||
+    (board[3][0] == anchor_rank - 1 && board[3][1] == anchor_rank - 2 &&
+     board[3][2] == anchor_rank - 3 &&
+     (board[2][2] == anchor_rank - 3 || board[3][3] == anchor_rank - 3));
 }
 
 using Tuple11 = Tuple<1, 1, 1, 7,   // row 0
@@ -531,94 +477,49 @@ template <>
 const char Tuple11::kTupleFile[] = "tuple_moves.11";
 
 template <>
-bool Tuple11::TupleBoard::IsRegular(bool transposed) const {
-  if (transposed) {
-    // Top-left 3x2 configuration:
-    // (0,0) != (1,0)
-    //  !=       V
-    // (0,1) != (1,1)
-    //  !=       V
-    // (0,2) >  (1,2)
-    // plus (1,1) != (0,2)
-    if (board[0][0] == board[0][1] || board[0][1] == board[0][2]) return false;
-    if (board[1][0] <= board[1][1] || board[1][1] <= board[1][2]) return false;
-    if (board[0][0] == board[1][0]) return false;
-    if (board[0][1] == board[1][1]) return false;
-    if (board[0][2] <= board[1][2]) return false;
-    if (board[1][1] == board[0][2]) return false;
+bool Tuple11::TupleBoard::IsRegular() const {
+  // Top-left 3x2 configuration:
+  // (0,0) != (1,0) != (2,0)
+  //  !=       !=        V
+  // (0,1) >  (1,1) >  (2,1)
+  // plus (1,1) != (2,0)
+  if (board[0][0] == board[1][0] || board[1][0] == board[2][0]) return false;
+  if (board[0][1] <= board[1][1] || board[1][1] <= board[2][1]) return false;
+  if (board[0][0] == board[0][1]) return false;
+  if (board[1][0] == board[1][1]) return false;
+  if (board[2][0] <= board[2][1]) return false;
+  if (board[1][1] == board[2][0]) return false;
 
-    // Rightmost two columns and bottom row are smaller than anchor rank.
-    int anchor_rank =
-        std::min(kMaxAnchorRank, std::min(board[1][1], board[0][2]));
-    if (board[0][3] > anchor_rank - 1) return false;
-    if (board[1][3] > anchor_rank - 1) return false;
-    if (board[2][0] > anchor_rank - 1) return false;
-    if (board[2][1] > anchor_rank - 1) return false;
-    if (board[2][2] > anchor_rank - 1) return false;
-    if (board[2][3] > anchor_rank - 1) return false;
-    if (board[3][0] > anchor_rank - 2) return false;
-    if (board[3][1] > anchor_rank - 2) return false;
-    if (board[3][2] > anchor_rank - 2) return false;
-    if (board[3][3] > anchor_rank - 2) return false;
-  } else {
-    // Top-left 3x2 configuration:
-    // (0,0) != (1,0) != (2,0)
-    //  !=       !=        V
-    // (0,1) >  (1,1) >  (2,1)
-    // plus (1,1) != (2,0)
-    if (board[0][0] == board[1][0] || board[1][0] == board[2][0]) return false;
-    if (board[0][1] <= board[1][1] || board[1][1] <= board[2][1]) return false;
-    if (board[0][0] == board[0][1]) return false;
-    if (board[1][0] == board[1][1]) return false;
-    if (board[2][0] <= board[2][1]) return false;
-    if (board[1][1] == board[2][0]) return false;
-
-    // Bottom two rows and rightmost column are smaller than anchor rank.
-    int anchor_rank =
-        std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]));
-    if (board[3][0] > anchor_rank - 1) return false;
-    if (board[3][1] > anchor_rank - 1) return false;
-    if (board[0][2] > anchor_rank - 1) return false;
-    if (board[1][2] > anchor_rank - 1) return false;
-    if (board[2][2] > anchor_rank - 1) return false;
-    if (board[3][2] > anchor_rank - 1) return false;
-    if (board[0][3] > anchor_rank - 2) return false;
-    if (board[1][3] > anchor_rank - 2) return false;
-    if (board[2][3] > anchor_rank - 2) return false;
-    if (board[3][3] > anchor_rank - 2) return false;
-  }
+  // Bottom two rows and rightmost column are smaller than anchor rank.
+  int anchor_rank =
+    std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]));
+  if (board[3][0] > anchor_rank - 1) return false;
+  if (board[3][1] > anchor_rank - 1) return false;
+  if (board[0][2] > anchor_rank - 1) return false;
+  if (board[1][2] > anchor_rank - 1) return false;
+  if (board[2][2] > anchor_rank - 1) return false;
+  if (board[3][2] > anchor_rank - 1) return false;
+  if (board[0][3] > anchor_rank - 2) return false;
+  if (board[1][3] > anchor_rank - 2) return false;
+  if (board[2][3] > anchor_rank - 2) return false;
+  if (board[3][3] > anchor_rank - 2) return false;
   return true;
 }
 
 template <>
-bool Tuple11::TupleBoard::IsGoal(bool transposed) const {
-  if (transposed) {
-    int anchor_rank =
-        std::min(kMaxAnchorRank, std::min(board[1][1], board[0][2]) - 1);
-    return board[1][2] == anchor_rank &&
-           ((board[1][3] == anchor_rank - 1 &&
-             (board[0][3] == anchor_rank - 1 ||
-              board[2][3] == anchor_rank - 1)) ||
-            (board[0][3] == anchor_rank - 1 && board[1][3] == anchor_rank - 2 &&
-             board[2][3] == anchor_rank - 2) ||
-            (board[2][2] == anchor_rank - 1 &&
-             (board[2][1] == anchor_rank - 1 ||
-              board[3][2] == anchor_rank - 1 ||
-              board[2][3] == anchor_rank - 1)));
-  } else {
-    int anchor_rank =
-        std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]) - 1);
-    return board[2][1] == anchor_rank &&
-           ((board[3][1] == anchor_rank - 1 &&
-             (board[3][0] == anchor_rank - 1 ||
-              board[3][2] == anchor_rank - 1)) ||
-            (board[3][0] == anchor_rank - 1 && board[3][1] == anchor_rank - 2 &&
-             board[3][2] == anchor_rank - 2) ||
-            (board[2][2] == anchor_rank - 1 &&
-             (board[1][2] == anchor_rank - 1 ||
-              board[2][3] == anchor_rank - 1 ||
-              board[3][2] == anchor_rank - 1)));
-  }
+bool Tuple11::TupleBoard::IsGoal() const {
+  int anchor_rank =
+    std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]) - 1);
+  return board[2][1] == anchor_rank &&
+    ((board[3][1] == anchor_rank - 1 &&
+      (board[3][0] == anchor_rank - 1 ||
+       board[3][2] == anchor_rank - 1)) ||
+     (board[3][0] == anchor_rank - 1 && board[3][1] == anchor_rank - 2 &&
+      board[3][2] == anchor_rank - 2) ||
+     (board[2][2] == anchor_rank - 1 &&
+      (board[1][2] == anchor_rank - 1 ||
+       board[2][3] == anchor_rank - 1 ||
+       board[3][2] == anchor_rank - 1)));
 }
 
 #endif

@@ -13,7 +13,7 @@ template <>
 const int Dpdf64::kMaxAnchorRank = 6;
 
 template <>
-bool Dpdf64::TupleBoard::IsRegular(bool transposed) const {
+bool Dpdf64::TupleBoard::IsRegular() const {
   // Rightmost column and two bottom rows are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[3][0] > anchor_rank - 1) return false;
@@ -30,7 +30,7 @@ bool Dpdf64::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Dpdf64::TupleBoard::IsGoal(bool transposed) const {
+bool Dpdf64::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if ((board[2][2] == anchor_rank - 1 &&
       (board[1][2] == anchor_rank - 1 ||
@@ -60,7 +60,7 @@ template <>
 const int Dpdf128::kMaxAnchorRank = 7;
 
 template <>
-bool Dpdf128::TupleBoard::IsRegular(bool transposed) const {
+bool Dpdf128::TupleBoard::IsRegular() const {
   // Rightmost column and two bottom rows are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[3][0] > anchor_rank - 1) return false;
@@ -77,7 +77,7 @@ bool Dpdf128::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Dpdf128::TupleBoard::IsGoal(bool transposed) const {
+bool Dpdf128::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if ((board[2][2] == anchor_rank - 1 &&
       (board[1][2] == anchor_rank - 1 ||
@@ -107,7 +107,7 @@ template <>
 const int Dpdf256::kMaxAnchorRank = 8;
 
 template <>
-bool Dpdf256::TupleBoard::IsRegular(bool transposed) const {
+bool Dpdf256::TupleBoard::IsRegular() const {
   // Rightmost column and two bottom rows are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[3][0] > anchor_rank - 1) return false;
@@ -124,7 +124,7 @@ bool Dpdf256::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Dpdf256::TupleBoard::IsGoal(bool transposed) const {
+bool Dpdf256::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if ((board[2][2] == anchor_rank - 1 &&
       (board[1][2] == anchor_rank - 1 ||
@@ -154,7 +154,7 @@ template <>
 const int Dpdf512::kMaxAnchorRank = 9;
 
 template <>
-bool Dpdf512::TupleBoard::IsRegular(bool transposed) const {
+bool Dpdf512::TupleBoard::IsRegular() const {
   // Rightmost column and two bottom rows are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[3][0] > anchor_rank - 1) return false;
@@ -171,7 +171,7 @@ bool Dpdf512::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Dpdf512::TupleBoard::IsGoal(bool transposed) const {
+bool Dpdf512::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if ((board[2][2] == anchor_rank - 1 &&
       (board[1][2] == anchor_rank - 1 ||

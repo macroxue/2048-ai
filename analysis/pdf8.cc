@@ -11,7 +11,7 @@ template <>
 const int Pdf64::kMaxAnchorRank = 6;
 
 template <>
-bool Pdf64::TupleBoard::IsRegular(bool transposed) const {
+bool Pdf64::TupleBoard::IsRegular() const {
   // Rightmost column and bottom row are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[3][0] > anchor_rank - 1) return false;
@@ -26,7 +26,7 @@ bool Pdf64::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Pdf64::TupleBoard::IsGoal(bool transposed) const {
+bool Pdf64::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if (board[2][2] == anchor_rank - 1 &&
       (board[2][3] == anchor_rank - 1 || board[3][2] == anchor_rank - 1))
@@ -51,7 +51,7 @@ template <>
 const int Pdf128::kMaxAnchorRank = 7;
 
 template <>
-bool Pdf128::TupleBoard::IsRegular(bool transposed) const {
+bool Pdf128::TupleBoard::IsRegular() const {
   // Rightmost column and bottom row are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[3][0] > anchor_rank - 1) return false;
@@ -66,7 +66,7 @@ bool Pdf128::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Pdf128::TupleBoard::IsGoal(bool transposed) const {
+bool Pdf128::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if (board[2][2] == anchor_rank - 1 &&
       (board[2][3] == anchor_rank - 1 || board[3][2] == anchor_rank - 1))
@@ -91,7 +91,7 @@ template <>
 const int Pdf256::kMaxAnchorRank = 8;
 
 template <>
-bool Pdf256::TupleBoard::IsRegular(bool transposed) const {
+bool Pdf256::TupleBoard::IsRegular() const {
   // Rightmost column and bottom row are smaller than anchor rank.
   int anchor_rank = kMaxAnchorRank;
   if (board[3][0] > anchor_rank - 1) return false;
@@ -106,7 +106,7 @@ bool Pdf256::TupleBoard::IsRegular(bool transposed) const {
 }
 
 template <>
-bool Pdf256::TupleBoard::IsGoal(bool transposed) const {
+bool Pdf256::TupleBoard::IsGoal() const {
   int anchor_rank = kMaxAnchorRank;
   if (board[2][2] == anchor_rank - 1 &&
       (board[2][3] == anchor_rank - 1 || board[3][2] == anchor_rank - 1))
