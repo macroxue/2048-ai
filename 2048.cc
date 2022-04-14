@@ -222,7 +222,6 @@ int CharToRank(char ch) {
 }
 
 void RunAgent(int client_socket) {
-  printf("Accepted client socket %d\n", client_socket);
   char buffer[1 << 16] = {0};
   while (true) {
     buffer[0] = '\0';
@@ -252,8 +251,7 @@ void RunAgent(int client_socket) {
       if (m == -1) break;
 
       AnalyzeMove(n, m);
-      std::string reply(
-                        "HTTP/1.1 200 OK\n"
+      std::string reply("HTTP/1.1 200 OK\n"
                         "Access-Control-Allow-Origin: *\n"
                         "Content-Type: text/plain\n"
                         "Content-Length: 0\n"
@@ -271,8 +269,7 @@ void RunAgent(int client_socket) {
         }
       }
 
-      std::string reply(
-                        "HTTP/1.1 200 OK\n"
+      std::string reply("HTTP/1.1 200 OK\n"
                         "Access-Control-Allow-Origin: *\n"
                         "Content-Type: text/plain\n"
                         "Content-Length: 1\n"
@@ -283,7 +280,6 @@ void RunAgent(int client_socket) {
     }
   }
   close(client_socket);
-  printf("Closed client socket %d\n", client_socket);
 }
 
 void RunServer(int server_port) {
