@@ -2,7 +2,9 @@
 #define TUPLE_H
 
 #include <errno.h>
+#include <atomic>
 #include <memory>
+#include <thread>
 
 #include "board.h"
 #include "tuple_move.h"
@@ -333,23 +335,32 @@ class Tuple {
     tuple_moves.reset(new TupleMove[kNumTuples]);
     memset(tuple_moves.get(), 0xff, sizeof(TupleMove) * kNumTuples);
 
-    TupleBoard b(tuple_moves.get());
-    b.Prefill();
+    const int kNumThreads = 2;
+    auto compute = [this, kNumThreads](int id) {
+      TupleBoard b(tuple_moves.get());
+      b.Prefill();
 
-    for (long i = 0; i < kNumTuples; ++i) {
-      if (tuple_moves[i].ValidProb()) continue;
+      for (long i = id; i < kNumTuples; i += kNumThreads) {
+        if (tuple_moves[i].ValidProb()) continue;
 
-      int tile[kNumTiles];
-      Decode(i, tile);
+        int tile[kNumTiles];
+        Decode(i, tile);
 
-      b.SetSmallTiles(tile);
-      if (b.IsGoal()) {
-        tuple_moves[i].SetProb(0);
-        ShowProgress();
-        continue;
+        b.SetSmallTiles(tile);
+        if (b.IsGoal()) {
+          tuple_moves[i].SetProb(0);
+          ShowProgress();
+          continue;
+        }
+        b.TryMoves();
       }
-      b.TryMoves();
-    }
+    };
+
+    std::unique_ptr<std::thread> threads[kNumThreads];
+    for (int i = 0; i < kNumThreads; ++i)
+      threads[i].reset(new std::thread(compute, i));
+    for (int i = 0; i < kNumThreads; ++i)
+      threads[i]->join();
     printf("\b\b\b\b");
   }
 
@@ -394,9 +405,10 @@ class Tuple {
   }
 
   static void ShowProgress() {
-    static long count = 0, progress = 1 << 20;
+    static std::atomic<long> count(0), progress(1 << 20);
     if (++count >= progress) {
       progress += 1 << 20;
+      if (count > kNumTuples) count = kNumTuples;
       printf("\b\b\b\b%3.0f%%", 100.0 * count / kNumTuples);
       fflush(stdout);
     }
