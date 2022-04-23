@@ -118,8 +118,8 @@ std::unique_ptr<LinePlan> line_plan;
 struct Valuation {
   float prob(int max_rank) const {
     if (type == kTuple10) return max_rank <= 14 ? value / 0.1166666 : value;
-    else if (type == kTuple11) return value;
-    else return value / 1000;
+    else if (type == kSearch) return value / 1000;
+    else return value;
   }
 
   void Show(int max_rank) const {
@@ -127,8 +127,12 @@ struct Valuation {
       printf("from search, h-score %.3f\n", prob(max_rank));
     else if (type == kTuple10)
       printf("from lookup-10, prob %.3f\n", prob(max_rank));
-    else
+    else if (type == kTuple11)
       printf("from lookup-11, prob %.3f\n", prob(max_rank));
+    else if (type == kBlockPlan)
+      printf("from block plan, prob %.3f\n", prob(max_rank));
+    else
+      printf("from line plan, prob %.3f\n", prob(max_rank));
   }
 
   enum Type {kInvalid, kTuple11, kTuple10, kLinePlan, kBlockPlan, kSearch};
