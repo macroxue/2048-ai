@@ -19,8 +19,8 @@ There is also a DPDF version. Since DPDF has too many positions, the usage is
 changed to online query instead and the lookup tables are not saved to files.
 You enter a position at the ">" prompt and the program outputs the best move
 and its probability of success. When you're done, type Control-C or Control-D
-to exit the program. Warning: DPDF-256 requires 2GB of free memory and DPDF-512
-7GB.
+to exit the program. Warning: DPDF-512 requires 7GB of free memory and DPDF-1024
+20GB.
 ```
 sudo apt install libreadline-dev
 make dpdf
@@ -28,6 +28,7 @@ make dpdf
 ./dpdf 128
 ./dpdf 256
 ./dpdf 512
+./dpdf 1024
 ```
 
 ## Snake Chain

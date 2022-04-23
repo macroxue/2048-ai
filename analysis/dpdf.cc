@@ -192,6 +192,53 @@ Dpdf512::Tuple() {
   printf("done\n");
 }
 
+using Dpdf1024 = Tuple<1, 1, 1, 10,   // row 0
+                       1, 1, 1, 10,   // row 1
+                       10, 10, 10, 10,   // row 2
+                       10, 10, 10, 10>;  // row 3
+
+template <>
+const int Dpdf1024::kMaxAnchorRank = 10;
+
+template <>
+bool Dpdf1024::TupleBoard::IsRegular() const {
+  // Rightmost column and two bottom rows are smaller than anchor rank.
+  int anchor_rank = kMaxAnchorRank;
+  if (board[3][0] > anchor_rank - 1) return false;
+  if (board[3][1] > anchor_rank - 1) return false;
+  if (board[0][2] > anchor_rank - 1) return false;
+  if (board[1][2] > anchor_rank - 1) return false;
+  if (board[2][2] > anchor_rank - 1) return false;
+  if (board[3][2] > anchor_rank - 1) return false;
+  if (board[0][3] > anchor_rank - 1) return false;
+  if (board[1][3] > anchor_rank - 1) return false;
+  if (board[2][3] > anchor_rank - 1) return false;
+  if (board[3][3] > anchor_rank - 1) return false;
+  return true;
+}
+
+template <>
+bool Dpdf1024::TupleBoard::IsGoal() const {
+  int anchor_rank = kMaxAnchorRank;
+  if ((board[2][2] == anchor_rank - 1 &&
+      (board[1][2] == anchor_rank - 1 ||
+       board[2][3] == anchor_rank - 1 ||
+       board[3][2] == anchor_rank - 1)) ||
+      (board[3][1] == anchor_rank - 1 &&
+       (board[3][0] == anchor_rank - 1 ||
+        board[3][2] == anchor_rank - 1)))
+    return true;
+  return false;
+}
+
+template <>
+Dpdf1024::Tuple() {
+  printf("Computing tuple_moves for %ld tuples ...     ", kNumTuples);
+  fflush(stdout);
+  Compute();
+  printf("done\n");
+}
+
 int* ReadIndex(int max_tile) {
   auto is_valid_tile = [&](int tile) {
     return tile != 1 && 0 <= tile && tile <= max_tile && (tile & (tile - 1)) == 0;
@@ -228,8 +275,8 @@ int main(int argc, const char *argv[]) {
   Board::BuildMoveMap();
   int tile = 64;
   if (argc > 1) tile = atoi(argv[1]);
-  if (tile != 64 && tile != 128 && tile != 256 && tile != 512) {
-    puts("Specify one of 64, 128, 256 and 512 tile.");
+  if (tile != 64 && tile != 128 && tile != 256 && tile != 512 && tile != 1024) {
+    puts("Specify one of 64, 128, 256, 512 and 1024 tiles.");
     exit(-1);
   }
 
@@ -271,6 +318,15 @@ int main(int argc, const char *argv[]) {
     Dpdf512 dpdf;
     puts("  16384  8192  4096  (1)");
     puts("   2048  1024   512  (2)");
+    puts("    (3)   (4)   (5)  (6)");
+    puts("    (7)   (8)   (9) (10)");
+    puts(message);
+    for (;;) dpdf.Query(ReadIndex(tile / 2));
+  }
+  if (tile == 1024) {
+    Dpdf1024 dpdf;
+    puts("  32768 16384  8192  (1)");
+    puts("   4096  2048  1024  (2)");
     puts("    (3)   (4)   (5)  (6)");
     puts("    (7)   (8)   (9) (10)");
     puts(message);
