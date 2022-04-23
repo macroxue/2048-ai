@@ -26,8 +26,6 @@ class Tuple {
                                (T8 > 1) + (T9 > 1) + (T10 > 1) + (T11 > 1) +
                                (T12 > 1) + (T13 > 1) + (T14 > 1) + (T15 > 1);
   static const int kMaxAnchorRank;
-  static const int kAnchorCol;
-  static const int kAnchorRow;
   static const char kTupleFile[];
 
   Tuple() {
@@ -280,12 +278,9 @@ class Tuple {
     }
 
     float SuggestMove(int* move) {
-      int anchor_ranks[2] = {board[kAnchorCol][kAnchorRow],
-                             board[kAnchorRow][kAnchorCol]};
       for (int i = 0; i < 2; ++i) {
         bool transposed = i;
-        auto anchor_rank = anchor_ranks[i];
-        if (anchor_rank <= kMaxAnchorRank && IsRegular() && !IsGoal()) {
+        if (IsRegular() && !IsGoal()) {
           auto v = CompactSmallTiles();
           if (move) {
             *move = compressed_moves[v].move;
@@ -426,10 +421,6 @@ using Tuple10 = Tuple<1, 1, 1, 10,  // row 0
 template <>
 const int Tuple10::kMaxAnchorRank = 10;
 template <>
-const int Tuple10::kAnchorCol = 2;
-template <>
-const int Tuple10::kAnchorRow = 1;
-template <>
 const char Tuple10::kTupleFile[] = "tuple_moves.10";
 
 template <>
@@ -446,6 +437,7 @@ bool Tuple10::TupleBoard::IsRegular() const {
 
   // Bottom two rows and rightmost column are smaller than anchor rank.
   int anchor_rank = std::min(board[0][1], std::min(board[1][1], board[2][1]));
+  if (anchor_rank > kMaxAnchorRank) return false;
   if (board[3][0] > anchor_rank - 1) return false;
   if (board[3][1] > anchor_rank - 2) return false;
   if (board[0][2] > anchor_rank - 1) return false;
@@ -482,10 +474,6 @@ using Tuple11 = Tuple<1, 1, 1, 7,   // row 0
 template <>
 const int Tuple11::kMaxAnchorRank = 7;
 template <>
-const int Tuple11::kAnchorCol = 2;
-template <>
-const int Tuple11::kAnchorRow = 1;
-template <>
 const char Tuple11::kTupleFile[] = "tuple_moves.11";
 
 template <>
@@ -505,6 +493,7 @@ bool Tuple11::TupleBoard::IsRegular() const {
   // Bottom two rows and rightmost column are smaller than anchor rank.
   int anchor_rank =
     std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]));
+  if (board[2][1] > kMaxAnchorRank) return false;
   if (board[3][0] > anchor_rank - 1) return false;
   if (board[3][1] > anchor_rank - 1) return false;
   if (board[0][2] > anchor_rank - 1) return false;
