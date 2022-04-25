@@ -1,6 +1,7 @@
 #ifndef TUPLE_H
 #define TUPLE_H
 
+#include <assert.h>
 #include <errno.h>
 #include <atomic>
 #include <memory>
@@ -57,6 +58,11 @@ class Tuple {
     printf("failed (errno %d)\n", errno);
   }
 
+  ~Tuple() {
+    if (tuple_moves) free(tuple_moves);
+    if (compressed_moves) free(compressed_moves);
+  }
+
   float SuggestMove(const Board& board, int* move) const {
     if (!compressed_moves) return 0;
 
@@ -68,7 +74,7 @@ class Tuple {
         {2, 0, 3, 1},
     };
 
-    TupleBoard b(board, compressed_moves.get());
+    TupleBoard b(board, compressed_moves);
     float max_prob = 0;
     for (int d = 0; d < 4; ++d) {
       if (d > 0) b.Rotate();
@@ -327,12 +333,17 @@ class Tuple {
   }
 
   void Compute() {
-    tuple_moves.reset(new TupleMove[kNumTuples]);
-    memset(tuple_moves.get(), 0xff, sizeof(TupleMove) * kNumTuples);
+    auto size = sizeof(TupleMove) * kNumTuples;
+    tuple_moves = (TupleMove*) malloc(size);
+    if (!tuple_moves) {
+      fprintf(stderr, "Out of memory!\n");
+      exit(1);
+    }
+    memset(tuple_moves, 0xff, size);
 
     const int kNumThreads = 2;
     auto compute = [this, kNumThreads](int id) {
-      TupleBoard b(tuple_moves.get());
+      TupleBoard b(tuple_moves);
       b.Prefill();
 
       for (long i = id; i < kNumTuples; i += kNumThreads) {
@@ -360,24 +371,33 @@ class Tuple {
   }
 
   void Compress() {
-    compressed_moves.reset(new CompressedTupleMove[kNumTuples]);
+    compressed_moves = (CompressedTupleMove*) tuple_moves;
     for (long i = 0; i < kNumTuples; ++i) {
       compressed_moves[i].move = tuple_moves[i].move;
       compressed_moves[i].SetProb(tuple_moves[i].Prob());
     }
-    tuple_moves.reset();
+    auto size = sizeof(CompressedTupleMove) * kNumTuples;
+    compressed_moves = (CompressedTupleMove*) realloc(compressed_moves, size);
+    assert(compressed_moves);
+    tuple_moves = nullptr;
   }
 
   bool Load() {
     FILE* fp = fopen(kTupleFile, "r");
     if (!fp) return false;
 
-    compressed_moves.reset(new CompressedTupleMove[kNumTuples]);
-    long items = fread(compressed_moves.get(), sizeof(CompressedTupleMove),
+    auto size = sizeof(CompressedTupleMove) * kNumTuples;
+    compressed_moves = (CompressedTupleMove*) malloc(size);
+    if (!compressed_moves) {
+      fprintf(stderr, "Out of memory!\n");
+      exit(1);
+    }
+    long items = fread(compressed_moves, sizeof(CompressedTupleMove),
                        kNumTuples, fp);
 
     if (items != kNumTuples) {
-      compressed_moves.reset();
+      free(compressed_moves);
+      compressed_moves = nullptr;
       fclose(fp);
       return false;
     }
@@ -389,7 +409,7 @@ class Tuple {
     FILE* fp = fopen(kTupleFile, "w");
     if (!fp) return false;
 
-    long items = fwrite(compressed_moves.get(), sizeof(CompressedTupleMove),
+    long items = fwrite(compressed_moves, sizeof(CompressedTupleMove),
                         kNumTuples, fp);
     if (items != kNumTuples) {
       fclose(fp);
@@ -409,8 +429,8 @@ class Tuple {
     }
   }
 
-  std::unique_ptr<TupleMove[]> tuple_moves;
-  std::unique_ptr<CompressedTupleMove[]> compressed_moves;
+  TupleMove* tuple_moves = nullptr;
+  CompressedTupleMove* compressed_moves = nullptr;
 };
 
 using Tuple10 = Tuple<1, 1, 1, 10,  // row 0
