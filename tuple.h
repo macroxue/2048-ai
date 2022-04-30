@@ -3,6 +3,10 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <sys/mman.h>
+
 #include <atomic>
 #include <memory>
 #include <thread>
@@ -60,7 +64,14 @@ class Tuple {
 
   ~Tuple() {
     if (tuple_moves) free(tuple_moves);
-    if (compressed_moves) free(compressed_moves);
+    if (compressed_moves) {
+      if (fd != -1) {
+        munmap(compressed_moves, sizeof(CompressedTupleMove) * kNumTuples);
+        close(fd);
+      } else {
+        free(compressed_moves);
+      }
+    }
   }
 
   float SuggestMove(const Board& board, int* move) const {
@@ -383,25 +394,25 @@ class Tuple {
   }
 
   bool Load() {
-    FILE* fp = fopen(kTupleFile, "r");
-    if (!fp) return false;
+    fd = open(kTupleFile, O_RDONLY);
+    if (fd == -1) return false;
 
-    auto size = sizeof(CompressedTupleMove) * kNumTuples;
-    compressed_moves = (CompressedTupleMove*) malloc(size);
-    if (!compressed_moves) {
-      fprintf(stderr, "Out of memory!\n");
+    auto file_size = lseek(fd, 0, SEEK_END);
+    if (file_size == -1) {
+      perror("lseek() failed");
       exit(1);
     }
-    long items = fread(compressed_moves, sizeof(CompressedTupleMove),
-                       kNumTuples, fp);
-
-    if (items != kNumTuples) {
-      free(compressed_moves);
-      compressed_moves = nullptr;
-      fclose(fp);
-      return false;
+    auto size = sizeof(CompressedTupleMove) * kNumTuples;
+    if ((size_t)file_size != size) {
+      fprintf(stderr, "Wrong file size, expected:%lu, actual:%ld\n", size, file_size);
+      exit(1);
     }
-    fclose(fp);
+    compressed_moves = (CompressedTupleMove*) mmap(nullptr, size, PROT_READ, MAP_PRIVATE,
+                                                   fd, 0);
+    if (!compressed_moves) {
+      perror("mmap() failed");
+      exit(1);
+    }
     return true;
   }
 
@@ -429,6 +440,7 @@ class Tuple {
     }
   }
 
+  int fd = -1;
   TupleMove* tuple_moves = nullptr;
   CompressedTupleMove* compressed_moves = nullptr;
 };
