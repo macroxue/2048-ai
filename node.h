@@ -28,6 +28,7 @@ struct Options {
   int prefill_rank = 0;
   int max_rank = 0;
   bool tuple_moves = true;
+  double save_threshold = 0.1;
 };
 
 static Options options;
@@ -220,7 +221,11 @@ class Node : public Board {
     int max_tile_score = TileScore(MaxRank());
     int score = Evaluate();
     if (options.tuple_moves) {
+#ifdef BIG_TUPLES
+      pass_score = score < max_tile_score * 2 ? -INT_MAX : max_tile_score * 2;
+#else
       pass_score = score < 0 ? -INT_MAX : max_tile_score * 2;
+#endif
       game_over_score = -std::max(1 << 17, max_tile_score * 2);
     } else {
       pass_score = -INT_MAX;

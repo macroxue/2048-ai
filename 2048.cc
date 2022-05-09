@@ -117,8 +117,7 @@ std::unique_ptr<LinePlan> line_plan;
 
 struct Valuation {
   float prob(int max_rank) const {
-    if (type == kTuple10) return max_rank <= 14 ? value / 0.1166666 : value;
-    else if (type == kSearch) return value / 1000;
+    if (type == kSearch) return value / 1000;
     else return value;
   }
 
@@ -141,26 +140,28 @@ struct Valuation {
 };
 
 Valuation SuggestMove(Node& n, int* m, bool lookup_only = false) {
-  float prob = 0;
-  if (prob == 0 && tuple11) {
-    prob = tuple11->SuggestMove(n, m);
-    if (prob < 0.9) prob = 0;
-    else return {Valuation::kTuple11, prob};
+  if (tuple11) {
+    auto prob = tuple11->SuggestMove(n, m);
+#ifdef BIG_TUPLES
+    if (prob > 0) return {Valuation::kTuple11, prob};
+#else
+    if (prob >= 0.9) return {Valuation::kTuple11, prob};
+#endif
   }
-  if (prob == 0 && tuple10) {
-    prob = tuple10->SuggestMove(n, m);
+  if (tuple10) {
+    auto prob = tuple10->SuggestMove(n, m);
     if (prob > 0) return {Valuation::kTuple10, prob};
   }
-  if (prob == 0 && line_plan) {
+  if (line_plan) {
     auto suggestion = line_plan->SuggestMove(n);
     *m = suggestion.move;
-    prob = suggestion.prob;
+    auto prob = suggestion.prob;
     if (prob > 0) return {Valuation::kLinePlan, prob};
   }
-  if (prob == 0 && block_plan) {
+  if (block_plan) {
     auto suggestion = block_plan->SuggestMove(n);
     *m = suggestion.move;
-    prob = suggestion.prob;
+    auto prob = suggestion.prob;
     if (prob > 0) return {Valuation::kBlockPlan, prob};
   }
   if (lookup_only) {
@@ -390,7 +391,7 @@ int main(int argc, char* argv[]) {
   char* log_file = nullptr;
   int server_port = 0;
   int c;
-  while ((c = getopt(argc, argv, "d:i:p:vIL:O:P:R:S:T")) != -1) {
+  while ((c = getopt(argc, argv, "d:i:p:s:vIL:O:P:R:S:T")) != -1) {
     switch (c) {
       case 'd':
         options.max_depth = atoi(optarg);
@@ -401,6 +402,9 @@ int main(int argc, char* argv[]) {
         break;
       case 'p':
         options.min_prob = atof(optarg);
+        break;
+      case 's':
+        options.save_threshold = atof(optarg);
         break;
       case 'v':
         options.verbose = true;
@@ -434,8 +438,8 @@ int main(int argc, char* argv[]) {
   Node::BuildMoveMap();
   Node::BuildScoreMap();
   if (options.tuple_moves) {
-    tuple10.reset(new Tuple10);
-    tuple11.reset(new Tuple11);
+    tuple10.reset(new Tuple10(options.save_threshold));
+    tuple11.reset(new Tuple11(options.save_threshold));
   } else {
     block_plan.reset(new BlockPlan);
     // line_plan.reset(new LinePlan);

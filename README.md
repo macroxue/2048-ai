@@ -2,7 +2,8 @@
 
 This is a strong AI for the popular game 2048. It reaches the 65536 tile 3% of the
 time, of course, without undos. To my knowledge, this is the first AI that "easily"
-reaches the 65536 tile. Previously [1] reported 1 out of 10,000 attempts.
+reaches the 65536 tile. Previously [1] reported 1 out of 10,000 attempts and [3],
+a follow-up to [1] by the same team, reported 0.02%.
 
 Below is a screenshot with [2048 clone](https://github.com/macroxue/2048-clone)
 when the AI was about to build a 32768 tile next to the 65536 tile but died
@@ -14,7 +15,9 @@ score.
 
 ## Performance
 
-On Intel Xeon 2.3GHz CPU
+The results below were obtained on Intel Xeon 2.3GHz CPUs.
+
+The original results were posted in Jan 2019 with small lookup tables.
 
 |depth |games |score/game|% 65536|% 32768|% 16384|% 8192|moves/s|seconds/game|
 |------|------|----------|-------|-------|-------|------|-------|------------|
@@ -24,31 +27,73 @@ On Intel Xeon 2.3GHz CPU
 |6     | 500  |  622000  | 1.8   | 68.4  | 96.0  | 99.6 | 150   |130 |
 |7     | 200  |  642571  | 3.0   | 74.0  | 97.5  | 99.0 | 50    |430 |
 
+It turns out the runs with depth 6 and 7 were a bit lucky. The table below
+extends the two cases to 1000 games and adds a new row for depth 8.
+
+|depth |games |score/game|% 65536|% 32768|% 16384|% 8192|moves/s|seconds/game|
+|------|------|----------|-------|-------|-------|------|-------|------------|
+|3     | 1000 |  417381  | 1.0   | 37.8  | 77.4  | 91.6 | 5000  |3   |
+|4     | 1000 |  527424  | 1.6   | 55.3  | 87.4  | 94.9 | 1500  |12  |
+|5     | 1000 |  589718  | 1.3   | 65.0  | 92.5  | 98.2 | 500   |42  |
+|6     | 1000 |  617404  | 1.8   | 68.0  | 95.0  | 98.8 | 150   |130 |
+|7     | 1000 |  635361  | 2.5   | 70.7  | 96.8  | 99.4 | 50    |430 |
+|8     | 1000 |  647347  | 2.8   | 72.1  | 96.8  | 99.5 | 15    |1300|
+
 The above numbers can be recreated with this command:
 ```
 ./2048 -d <depth> -i <games> 2001
 ```
+
 The AI is considerably stronger and faster than the previous best at [2], which
 reported 69% rate of reaching the 32768 tile but never the 65536 tile.
 
+In 2021, a paper [3] came out and reported that 72% games reached the 32768 tile
+and 0.02% reached the 65536 tile. For the 32768 tile, it's almost as strong as
+this AI; for the 65536 tile, it's still far behind.
+
+In May 2022, this AI is significantly improved with a large lookup table, as
+shown by the results below. Depth 5 now is as good as depth 8 before. Depth 6
+and depth 7 average around a score of 690000, which is comparable to reaching
+a 32768 tile, a 16384 tile and a 2048 tile.
+
+|depth |games |score/game|% 65536|% 32768|% 16384|% 8192|moves/s|seconds/game|
+|------|------|----------|-------|-------|-------|------|-------|------------|
+|3     | 1000 |  479226  | 1.2   | 50.3  | 80.0  | 92.8 | 5000  |3   |
+|4     | 1000 |  618066  | 3.0   | 70.0  | 92.0  | 96.2 | 1500  |15  |
+|5     | 1000 |  655818  | 2.7   | 74.1  | 95.2  | 98.3 | 500   |45  |
+|6     | 1000 |  689744  | 3.3   | 77.9  | 97.4  | 99.7 | 150   |150 |
+|7     | 1000 |  691458  | 3.2   | 78.1  | 96.7  | 99.2 | 50    |450 |
+
+The updated numbers can be recreated with this command:
+```
+./2048b -d <depth> -i 1000 2001
+```
 
 ## System requirements
 
- * A Linux environment with G++ compiler supporting c++0x or above.
- * 8GB of memory
- * 4GB of free disk (SSD preferred)
+A Linux environment with G++ compiler supporting c++0x or above is required.
+
+### For small runs
+ * 5GB of free memory
+ * 3GB of free disk (SSD preferred)
+
+### For big runs
+ * 27GB of free memory
+ * 18GB of free disk (SSD preferred)
 
 ## How to build
 ```
 sudo apt install g++
-make 2048
+make
 ```
+Two executables `2048` and `2048b` are generated. `2048` is for small runs
+and produces 2019 results. `2048b` is for big runs and produces 2022 results.
 
 ## How to run
 
-Be patient for the very first run. It can take 20 to 30 minutes to compute and
-save two lookup tables, depending on the speed of the system. Later runs are
-much faster by loading the tables within a few seconds.
+Be patient for the very first small run. It can take 4 to 8 minutes, depending
+on the speed of the system, to compute and save two lookup tables. Later runs
+are much faster by loading the tables instantly.
 
 Below are some examples.
 ```
@@ -66,6 +111,13 @@ Below are some examples.
 
 # Play game# 2833 with 7-ply search. You will see the 1556664 high score.
 ./2048 -d7 2833
+```
+
+For the first big run, be more patient since it may take 25 minutes or more
+to compute a very large lookup table.
+```
+# Play game# 3016 with 5-ply search. You will see the 1704908 high score.
+./2048b -d5 3016
 ```
 
 ### Interactive mode
@@ -205,8 +257,7 @@ the exploration are saved for future lookups.
 The same idea is extended to have two moving rows and one moving column so
 building the next 512 tile can be from lookups as well. This greatly improves
 the strength and the speed of the AI, at the cost of more memory and more time
-in computing the lookup tables.  Right now, the AI uses 4.3GB of memory
-to compute the tables and 3.2GB after that.
+in computing the lookup tables.
 
 ### Analysis
 
@@ -231,3 +282,7 @@ games. IEEE Transactions on Computational Intelligence and AI in
 Games, 2016.
 
 [2] https://github.com/aszczepanski/2048.
+
+[3] H. Guei, L. P. Chen and I. C. Wu, "Optimistic Temporal Difference
+Learning for 2048," in IEEE Transactions on Games, doi:
+10.1109/TG.2021.3109887.

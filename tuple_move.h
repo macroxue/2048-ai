@@ -21,16 +21,4 @@ struct TupleMove {
 };
 #endif
 
-struct CompressedTupleMove {
-  float Prob() const { return prob * float(1.0 / 60); }
-  bool ValidProb() const { return prob <= 60; }
-  void SetProb(float p) {
-    prob = p * float(60.0);
-    if (p > 0 && prob == 0) prob = 1;
-  }
-
-  unsigned char move : 2;
-  unsigned char prob : 6;
-};
-
 #endif

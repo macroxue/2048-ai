@@ -10,10 +10,12 @@
 
 #include <atomic>
 #include <memory>
+#include <numeric>
 #include <thread>
 
 #include "board.h"
 #include "tuple_move.h"
+#include "array.h"
 
 /*
  T0  T1  T2  T3
@@ -34,50 +36,16 @@ class Tuple {
   static const int kMaxAnchorRank;
   static const char kTupleFile[];
 
-  Tuple() {
-    printf("Loading tuple moves from %s ... ", kTupleFile);
-    fflush(stdout);
-    if (Load()) {
-      printf("done\n");
-      return;
-    }
-    puts(strerror(errno));
-
-    printf("Computing tuple moves for %ld tuples ...     ", kNumTuples);
-    fflush(stdout);
-    Compute();
-    printf("done\n");
-
-    printf("Compress tuple moves ... ");
-    fflush(stdout);
-    Compress();
-    printf("done\n");
-
-    if (strlen(kTupleFile) == 0) return;
-    printf("Saving tuple moves to %s ... ", kTupleFile);
-    fflush(stdout);
-    if (Save()) {
-      printf("done\n");
-      return;
-    }
-    printf("failed (errno %d)\n", errno);
+  Tuple(double save_threshold) : tuple_moves(0xff), save_threshold(save_threshold) {
+    tuple_moves.Load(kTupleFile);
   }
 
   ~Tuple() {
-    if (tuple_moves) free(tuple_moves);
-    if (compressed_moves) {
-      if (fd != -1) {
-        munmap(compressed_moves, sizeof(CompressedTupleMove) * kNumTuples);
-        close(fd);
-      } else {
-        free(compressed_moves);
-      }
-    }
+    auto is_valid = [](const TupleMove& t) { return t.ValidProb() && t.Prob() > 0; };
+    tuple_moves.Save(kTupleFile, is_valid, save_threshold);
   }
 
-  float SuggestMove(const Board& board, int* move) const {
-    if (!compressed_moves) return 0;
-
+  float SuggestMove(const Board& board, int* move) {
     static constexpr int rotated_moves[4][4] = {
         // up left right down
         {0, 1, 2, 3},
@@ -86,7 +54,7 @@ class Tuple {
         {2, 0, 3, 1},
     };
 
-    TupleBoard b(board, compressed_moves);
+    TupleBoard b(board, tuple_moves);
     float max_prob = 0;
     for (int d = 0; d < 4; ++d) {
       if (d > 0) b.Rotate();
@@ -101,15 +69,8 @@ class Tuple {
   }
 
   float Lookup(int v, int* m) const {
-    if (compressed_moves) {
-      *m = compressed_moves[v].move;
-      return compressed_moves[v].Prob();
-    }
-    if (tuple_moves) {
-      *m = tuple_moves[v].move;
-      return tuple_moves[v].Prob();
-    }
-    return 0;
+    *m = tuple_moves[v].move;
+    return tuple_moves[v].Prob();
   }
 
   void Show() const {
@@ -139,9 +100,9 @@ class Tuple {
   class TupleBoard : public Board {
    public:
     TupleBoard() = default;
-    TupleBoard(TupleMove* tuple_moves) : tuple_moves(tuple_moves) {}
-    TupleBoard(const Board& b, CompressedTupleMove* compressed_moves)
-        : Board(b), compressed_moves(compressed_moves) {}
+    TupleBoard(Array<TupleMove, kNumTuples>& tuple_moves) : tuple_moves(tuple_moves) {}
+    TupleBoard(const Board& b, Array<TupleMove, kNumTuples>& tuple_moves)
+        : Board(b), tuple_moves(tuple_moves) {}
 
     void Prefill() {
       int max_rank = 15;
@@ -204,8 +165,59 @@ class Tuple {
       return v;
     }
 
-    bool IsGoal() const;
-    bool IsRegular() const;
+    bool IsRegular() const {
+      // Top-left 3x2 configuration:
+      // (0,0) != (1,0) != (2,0)
+      //  !=       !=        V
+      // (0,1) >  (1,1) >  (2,1)
+      // plus (1,1) != (2,0)
+#ifdef BIG_TUPLES
+      if (board[0][0] == 0 || board[1][0] == 0) return false;
+#endif
+      if (board[0][0] == board[1][0] || board[1][0] == board[2][0]) return false;
+      if (board[0][1] <= board[1][1] || board[1][1] <= board[2][1]) return false;
+      if (board[0][0] == board[0][1]) return false;
+      if (board[1][0] == board[1][1]) return false;
+      if (board[2][0] <= board[2][1]) return false;
+      if (board[1][1] == board[2][0]) return false;
+
+      // Bottom two rows and rightmost column are smaller than anchor rank.
+      int anchor_rank =
+        std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]));
+      if (board[2][1] > kMaxAnchorRank) return false;
+      if (board[3][0] > anchor_rank - 1) return false;
+      if (board[3][1] > anchor_rank - 1) return false;
+      if (board[0][2] > anchor_rank - 1) return false;
+      if (board[1][2] > anchor_rank - 1) return false;
+      if (board[2][2] > anchor_rank - 1) return false;
+      if (board[3][2] > anchor_rank - 1) return false;
+      if (board[0][3] > anchor_rank - 2) return false;
+      if (board[1][3] > anchor_rank - 2) return false;
+      if (board[2][3] > anchor_rank - 2) return false;
+      if (board[3][3] > anchor_rank - 2) return false;
+      return true;
+    }
+
+    bool IsGoal() const {
+      int anchor_rank =
+        std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]) - 1);
+      return board[2][1] == anchor_rank &&
+        (
+#ifdef BIG_TUPLES
+         board[3][0] == anchor_rank || board[3][1] == anchor_rank ||
+         board[0][2] == anchor_rank || board[1][2] == anchor_rank ||
+         board[2][2] == anchor_rank || board[3][2] == anchor_rank ||
+#endif
+         (board[3][1] == anchor_rank - 1 &&
+          (board[3][0] == anchor_rank - 1 ||
+           board[3][2] == anchor_rank - 1)) ||
+         (board[3][0] == anchor_rank - 1 && board[3][1] == anchor_rank - 2 &&
+          board[3][2] == anchor_rank - 2) ||
+         (board[2][2] == anchor_rank - 1 &&
+          (board[1][2] == anchor_rank - 1 ||
+           board[2][3] == anchor_rank - 1 ||
+           board[3][2] == anchor_rank - 1)));
+    }
 
     bool HasSameTops(const TupleBoard& parent) const {
       if (T0 == 1 && board[0][0] != parent.board[0][0]) return false;
@@ -300,12 +312,17 @@ class Tuple {
         bool transposed = i;
         if (IsRegular() && !IsGoal()) {
           auto v = CompactSmallTiles();
-          if (move) {
-            *move = compressed_moves[v].move;
-            if (transposed) *move = (*move < 2 ? 1 : 5) - *move;
+          {
+            // Don't use tuple_move pointer after Compute as it may be invalidated.
+            auto tuple_move = tuple_moves.locate(v);
+            if (!tuple_move || !tuple_move->ValidProb()) Compute();
           }
-          if (transposed) Transpose();
-          return compressed_moves[v].Prob();
+          *move = tuple_moves[v].move;
+          if (transposed) {
+            *move = (*move < 2 ? 1 : 5) - *move;
+            Transpose();
+          }
+          return tuple_moves[v].Prob();
         }
         Transpose();
       }
@@ -313,8 +330,17 @@ class Tuple {
     }
 
    private:
-    TupleMove* const tuple_moves = nullptr;
-    CompressedTupleMove* const compressed_moves = nullptr;
+    void Compute() {
+      TupleBoard b(*this, tuple_moves);
+      b.Prefill();
+      assert(b.IsRegular());
+      assert(!b.IsGoal());
+      printf(" ");
+      b.TryMoves();
+      printf("\b");
+    }
+
+    Array<TupleMove, kNumTuples>& tuple_moves;
   };
 
   template <int M>
@@ -344,106 +370,17 @@ class Tuple {
     if (T0 > 1) tile[i--] = Decode<T0>(&v);
   }
 
-  void Compute() {
-    auto size = sizeof(TupleMove) * kNumTuples;
-    tuple_moves = (TupleMove*) malloc(size);
-    if (!tuple_moves) {
-      fprintf(stderr, "Out of memory!\n");
-      exit(1);
-    }
-    memset(tuple_moves, 0xff, size);
-
-    const int kNumThreads = 2;
-    auto compute = [this, kNumThreads](int id) {
-      TupleBoard b(tuple_moves);
-      b.Prefill();
-
-      for (long i = id; i < kNumTuples; i += kNumThreads) {
-        if (tuple_moves[i].ValidProb()) continue;
-
-        int tile[kNumTiles];
-        Decode(i, tile);
-
-        b.SetSmallTiles(tile);
-        if (b.IsGoal()) {
-          tuple_moves[i].SetProb(0);
-          ShowProgress();
-          continue;
-        }
-        b.TryMoves();
-      }
-    };
-
-    std::unique_ptr<std::thread> threads[kNumThreads];
-    for (int i = 0; i < kNumThreads; ++i)
-      threads[i].reset(new std::thread(compute, i));
-    for (int i = 0; i < kNumThreads; ++i)
-      threads[i]->join();
-    printf("\b\b\b\b");
-  }
-
-  void Compress() {
-    compressed_moves = (CompressedTupleMove*) tuple_moves;
-    for (long i = 0; i < kNumTuples; ++i) {
-      compressed_moves[i].move = tuple_moves[i].move;
-      compressed_moves[i].SetProb(tuple_moves[i].Prob());
-    }
-    auto size = sizeof(CompressedTupleMove) * kNumTuples;
-    compressed_moves = (CompressedTupleMove*) realloc(compressed_moves, size);
-    assert(compressed_moves);
-    tuple_moves = nullptr;
-  }
-
-  bool Load() {
-    fd = open(kTupleFile, O_RDONLY);
-    if (fd == -1) return false;
-
-    auto file_size = lseek(fd, 0, SEEK_END);
-    if (file_size == -1) {
-      perror("lseek() failed");
-      exit(1);
-    }
-    auto size = sizeof(CompressedTupleMove) * kNumTuples;
-    if ((size_t)file_size != size) {
-      fprintf(stderr, "Wrong file size, expected:%lu, actual:%ld\n", size, file_size);
-      exit(1);
-    }
-    compressed_moves = (CompressedTupleMove*) mmap(nullptr, size, PROT_READ, MAP_PRIVATE,
-                                                   fd, 0);
-    if (!compressed_moves) {
-      perror("mmap() failed");
-      exit(1);
-    }
-    return true;
-  }
-
-  bool Save() const {
-    FILE* fp = fopen(kTupleFile, "w");
-    if (!fp) return false;
-
-    long items = fwrite(compressed_moves, sizeof(CompressedTupleMove),
-                        kNumTuples, fp);
-    if (items != kNumTuples) {
-      fclose(fp);
-      return false;
-    }
-    fclose(fp);
-    return true;
-  }
-
   static void ShowProgress() {
-    static std::atomic<long> count(0), progress(1 << 20);
-    if (++count >= progress) {
-      progress += 1 << 20;
-      if (count > kNumTuples) count = kNumTuples;
-      printf("\b\b\b\b%3.0f%%", 100.0 * count / kNumTuples);
+    static long progress_count = 0, progress_check = 1 << 20;
+    if (++progress_count >= progress_check) {
+      progress_check += 1 << 20;
+      printf("\b%c", "-\\|/"[(progress_count >> 20) % 4]);
       fflush(stdout);
     }
   }
 
-  int fd = -1;
-  TupleMove* tuple_moves = nullptr;
-  CompressedTupleMove* compressed_moves = nullptr;
+  Array<TupleMove, kNumTuples> tuple_moves;
+  double save_threshold;
 };
 
 using Tuple10 = Tuple<1, 1, 1, 10,  // row 0
@@ -454,19 +391,26 @@ using Tuple10 = Tuple<1, 1, 1, 10,  // row 0
 template <>
 const int Tuple10::kMaxAnchorRank = 10;
 template <>
-const char Tuple10::kTupleFile[] = "tuple_moves.10";
+const char Tuple10::kTupleFile[] = "tuple_moves.10a";
 
 template <>
 bool Tuple10::TupleBoard::IsRegular() const {
   // Top-left 3x2 configuration:
-  // (0,0) != (1,0) != (2,0)
-  //  !=       !=        V
+  // (0,0) != (1,0) != (2,0) > (3,0)
+  //  !=       !=       !=
   // (0,1) != (1,1) != (2,1)
+#ifdef BIG_TUPLES
+  if (board[0][0] == 0 || board[1][0] == 0) return false;
+#endif
   if (board[0][0] == board[1][0] || board[1][0] == board[2][0]) return false;
   if (board[0][1] == board[1][1] || board[1][1] == board[2][1]) return false;
   if (board[0][0] == board[0][1]) return false;
   if (board[1][0] == board[1][1]) return false;
+#ifdef BIG_TUPLES
+  if (board[2][0] == board[2][1] || board[2][0] <= board[3][0]) return false;
+#else
   if (board[2][0] <= board[2][1]) return false;
+#endif
 
   // Bottom two rows and rightmost column are smaller than anchor rank.
   int anchor_rank = std::min(board[0][1], std::min(board[1][1], board[2][1]));
@@ -499,6 +443,17 @@ bool Tuple10::TupleBoard::IsGoal() const {
      (board[2][2] == anchor_rank - 3 || board[3][3] == anchor_rank - 3));
 }
 
+#ifdef BIG_TUPLES
+using Tuple11 = Tuple<1, 1, 1, 9,   // row 0
+                      1, 1,10, 9,   // row 1
+                      9, 9, 9, 9,   // row 2
+                      8, 8, 8, 8>;  // row 3
+
+template <>
+const int Tuple11::kMaxAnchorRank = 9;
+template <>
+const char Tuple11::kTupleFile[] = "tuple_moves.11b";
+#else
 using Tuple11 = Tuple<1, 1, 1, 7,   // row 0
                       1, 1, 8, 7,   // row 1
                       7, 7, 7, 7,   // row 2
@@ -507,53 +462,7 @@ using Tuple11 = Tuple<1, 1, 1, 7,   // row 0
 template <>
 const int Tuple11::kMaxAnchorRank = 7;
 template <>
-const char Tuple11::kTupleFile[] = "tuple_moves.11";
-
-template <>
-bool Tuple11::TupleBoard::IsRegular() const {
-  // Top-left 3x2 configuration:
-  // (0,0) != (1,0) != (2,0)
-  //  !=       !=        V
-  // (0,1) >  (1,1) >  (2,1)
-  // plus (1,1) != (2,0)
-  if (board[0][0] == board[1][0] || board[1][0] == board[2][0]) return false;
-  if (board[0][1] <= board[1][1] || board[1][1] <= board[2][1]) return false;
-  if (board[0][0] == board[0][1]) return false;
-  if (board[1][0] == board[1][1]) return false;
-  if (board[2][0] <= board[2][1]) return false;
-  if (board[1][1] == board[2][0]) return false;
-
-  // Bottom two rows and rightmost column are smaller than anchor rank.
-  int anchor_rank =
-    std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]));
-  if (board[2][1] > kMaxAnchorRank) return false;
-  if (board[3][0] > anchor_rank - 1) return false;
-  if (board[3][1] > anchor_rank - 1) return false;
-  if (board[0][2] > anchor_rank - 1) return false;
-  if (board[1][2] > anchor_rank - 1) return false;
-  if (board[2][2] > anchor_rank - 1) return false;
-  if (board[3][2] > anchor_rank - 1) return false;
-  if (board[0][3] > anchor_rank - 2) return false;
-  if (board[1][3] > anchor_rank - 2) return false;
-  if (board[2][3] > anchor_rank - 2) return false;
-  if (board[3][3] > anchor_rank - 2) return false;
-  return true;
-}
-
-template <>
-bool Tuple11::TupleBoard::IsGoal() const {
-  int anchor_rank =
-    std::min(kMaxAnchorRank, std::min(board[1][1], board[2][0]) - 1);
-  return board[2][1] == anchor_rank &&
-    ((board[3][1] == anchor_rank - 1 &&
-      (board[3][0] == anchor_rank - 1 ||
-       board[3][2] == anchor_rank - 1)) ||
-     (board[3][0] == anchor_rank - 1 && board[3][1] == anchor_rank - 2 &&
-      board[3][2] == anchor_rank - 2) ||
-     (board[2][2] == anchor_rank - 1 &&
-      (board[1][2] == anchor_rank - 1 ||
-       board[2][3] == anchor_rank - 1 ||
-       board[3][2] == anchor_rank - 1)));
-}
+const char Tuple11::kTupleFile[] = "tuple_moves.11a";
+#endif
 
 #endif

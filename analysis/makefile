@@ -1,6 +1,6 @@
 all: snake8 pdf8
 
-HEADERS=../board.h ../tuple_move.h ../tuple.h
+HEADERS=../board.h ../tuple_move.h tuple.h
 CC_OPTIONS=-std=c++0x -pthread -O3
 
 snake8: snake8.cc ../board.cc $(HEADERS)

@@ -1,6 +1,6 @@
 #include <stdio.h>
 
-#include "../tuple.h"
+#include "tuple.h"
 
 using Pdf64 = Tuple<1, 1, 1, 6,   // row 0
                     1, 1, 1, 6,   // row 1
