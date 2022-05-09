@@ -6,6 +6,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
+#include <unistd.h>
 
 #include <atomic>
 #include <memory>
