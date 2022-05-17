@@ -143,7 +143,7 @@ Valuation SuggestMove(Node& n, int* m, bool lookup_only = false) {
   if (tuple11) {
     auto prob = tuple11->SuggestMove(n, m);
 #ifdef BIG_TUPLES
-    if (prob > 0) return {Valuation::kTuple11, prob};
+    if (prob > 0.1) return {Valuation::kTuple11, prob};
 #else
     if (prob >= 0.9) return {Valuation::kTuple11, prob};
 #endif
