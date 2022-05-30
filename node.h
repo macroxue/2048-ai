@@ -181,7 +181,8 @@ class Node : public Board {
         empty_tiles += board[x][y] == 0;
       }
 
-    if (cache.Lookup(compact_board, prob, depth, &score)) return score;
+    if (!skip_cache && cache.Lookup(compact_board, prob, depth, &score))
+      return score;
 
     float tile2_prob = prob / empty_tiles * 0.9;
     float tile4_prob = prob / empty_tiles * 0.1;
@@ -231,6 +232,17 @@ class Node : public Board {
       pass_score = -INT_MAX;
       game_over_score = -1 << 22;
     }
+    skip_cache = false;
+    auto h_score = TryAllMoves(depth, 1, best_move);
+#ifdef BIG_TUPLES
+    if (h_score < 0) {
+        pass_score = -INT_MAX;
+        game_over_score = -1 << 22;
+        skip_cache = true;
+        h_score = TryAllMoves(depth, 1, best_move);
+    }
+#endif
+    return h_score;
     return TryAllMoves(depth, 1, best_move);
   }
 
@@ -248,6 +260,7 @@ class Node : public Board {
   int rand_y = -1;
   int pass_score;
   int game_over_score;
+  bool skip_cache;
 };
 
 // static
