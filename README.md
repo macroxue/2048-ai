@@ -11,7 +11,7 @@ unfortunately. In text mode, the AI also achieved the high score of 1556664
 with a 65536 tile and a 32768 tile. Read on to see how to recreate the high
 score.
 
-![High Score](https://github.com/macroxue/2048-ai/blob/master/highscore.png)
+[![High Score](https://github.com/macroxue/2048-ai/blob/master/highscore.png)](https://macroxue.github.io/2048-clone)
 
 ## Performance
 
@@ -49,9 +49,9 @@ and 0.02% reached the 65536 tile. For the 32768 tile, it's almost as strong as
 this AI; for the 65536 tile, it's still far behind.
 
 In May 2022, this AI is significantly improved with a large lookup table, as
-shown by the results below. Depth 5 now is as good as depth 8 before. Depth 6
-and depth 7 average around a score of 690000, which is comparable to reaching
-a 32768 tile, a 16384 tile and a 2048 tile.
+shown by the results below. Depth 5 now is as good as depth 8 before. The runs
+at depth 8 average a score of more than 711,000, which is comparable to a game
+with a 32768 tile, a 16384 tile and a 4096 tile.
 
 |depth |games |score/game|% 65536|% 32768|% 16384|% 8192|moves/s|seconds/game|
 |------|------|----------|-------|-------|-------|------|-------|------------|
@@ -60,6 +60,7 @@ a 32768 tile, a 16384 tile and a 2048 tile.
 |5     | 1000 |  660650  | 2.7   | 74.8  | 95.6  | 98.6 | 500   |45  |
 |6     | 1000 |  690620  | 3.3   | 78.0  | 97.5  | 99.7 | 150   |150 |
 |7     | 1000 |  693519  | 3.2   | 78.3  | 97.0  | 99.3 | 50    |450 |
+|8     | 1000 |  711769  | 3.5   | 80.5  | 98.7  | 99.7 | 15    |1500|
 
 The updated numbers can be recreated with this command:
 ```
