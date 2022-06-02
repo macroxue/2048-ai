@@ -53,19 +53,21 @@ shown by the results below. Depth 5 now is as good as depth 8 before. The runs
 at depth 8 average a score of more than 711,000, which is comparable to a game
 with a 32768 tile, a 16384 tile and a 4096 tile.
 
-|depth |games |score/game|% 65536|% 32768|% 16384|% 8192|moves/s|seconds/game|
-|------|------|----------|-------|-------|-------|------|-------|------------|
-|3     | 1000 |  493058  | 1.3   | 52.5  | 81.4  | 93.7 | 5000  |3   |
-|4     | 1000 |  625897  | 3.2   | 70.7  | 92.9  | 96.9 | 1500  |15  |
-|5     | 1000 |  660650  | 2.7   | 74.8  | 95.6  | 98.6 | 500   |45  |
-|6     | 1000 |  690620  | 3.3   | 78.0  | 97.5  | 99.7 | 150   |150 |
-|7     | 1000 |  693519  | 3.2   | 78.3  | 97.0  | 99.3 | 50    |450 |
-|8     | 1000 |  711769  | 3.5   | 80.5  | 98.7  | 99.7 | 15    |1500|
+|depth|games |score/game|% 65536|% 32768|% 16384|% 8192 |moves/s|seconds/game|
+|-----|------|----------|-------|-------|-------|-------|-------|------------|
+|   3 | 1000 |   493058 |   1.3 |  52.5 |  81.4 |  93.7 |  6461 |          3 |
+|   4 | 1000 |   625898 |   3.2 |  70.7 |  92.9 |  96.9 |  1864 |         12 |
+|   5 | 1000 |   660650 |   2.7 |  74.8 |  95.6 |  98.6 |   594 |         39 |
+|   6 | 1000 |   690621 |   3.3 |  78.0 |  97.5 |  99.7 |   196 |        125 |
+|   7 | 1000 |   693519 |   3.2 |  78.3 |  97.0 |  99.3 |    60 |        412 |
+|   8 | 1000 |   711769 |   3.5 |  80.5 |  98.7 |  99.7 |    17 |       1453 |
 
 The updated numbers can be recreated with this command:
 ```
 ./2048b -d <depth> -i 1000 2001
 ```
+The outputs of these runs can be found in
+[outputs](https://github.com/macroxue/2048-ai/tree/master/outputs) directory.
 
 ## System requirements
 
