@@ -22,7 +22,8 @@ class Board {
       int v = 0;
       for (int x = 0; x < N; ++x) v = v * 32 + board[x][y];
       int c = move_map[v];
-      if (c != v) moved = true;
+      if (c == v) continue;
+      moved = true;
       for (int x = N - 1; x >= 0; --x) {
         board[x][y] = c % 32;
         c /= 32;
@@ -37,7 +38,8 @@ class Board {
       int v = 0;
       for (int x = N - 1; x >= 0; --x) v = v * 32 + board[x][y];
       int c = move_map[v];
-      if (c != v) moved = true;
+      if (c == v) continue;
+      moved = true;
       for (int x = 0; x < N; ++x) {
         board[x][y] = c % 32;
         c /= 32;
@@ -52,7 +54,8 @@ class Board {
       int v = 0;
       for (int y = 0; y < N; ++y) v = v * 32 + board[x][y];
       int c = move_map[v];
-      if (c != v) moved = true;
+      if (c == v) continue;
+      moved = true;
       for (int y = N - 1; y >= 0; --y) {
         board[x][y] = c % 32;
         c /= 32;
@@ -67,7 +70,8 @@ class Board {
       int v = 0;
       for (int y = N - 1; y >= 0; --y) v = v * 32 + board[x][y];
       int c = move_map[v];
-      if (c != v) moved = true;
+      if (c == v) continue;
+      moved = true;
       for (int y = 0; y < N; ++y) {
         board[x][y] = c % 32;
         c /= 32;
