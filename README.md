@@ -1,15 +1,16 @@
 # 2048 - ai
 
-This is a strong AI for the popular game 2048. It reaches the 65536 tile 3% of the
-time, of course, without undos. To my knowledge, this is the first AI that "easily"
-reaches the 65536 tile. Previously [1] reported 1 out of 10,000 attempts and [3],
-a follow-up to [1] by the same team, reported 0.02%.
+This is a strong AI for the popular game 2048. It reaches the 65536 tile 3.5%
+of the time and the 32768 tile 80.5% of the time, of course, without undos.
+To my knowledge, this is the first AI that "easily" reaches the 65536 tile.
+Previously [1] reported 1 out of 10,000 attempts and [3], a follow-up to [1] by
+the same team, reported 0.02%.
 
 Below is a screenshot with [2048 clone](https://github.com/macroxue/2048-clone)
 when the AI was about to build a 32768 tile next to the 65536 tile but died
-unfortunately. In text mode, the AI also achieved the high score of 1556664
-with a 65536 tile and a 32768 tile. Read on to see how to recreate the high
-score.
+unfortunately. In text mode, the AI also achieved the high score of 1704908
+with a 65536 tile, a 32768 tile and a 16384 tile. Read on to see how to recreate
+the high score.
 
 [![High Score](https://github.com/macroxue/2048-ai/blob/master/highscore.png)](https://macroxue.github.io/2048-clone)
 
@@ -109,7 +110,7 @@ Below are some examples.
 # Play 10 games starting game# 2050 with 3-ply search.
 ./2048 -d3 -i10 2050
 
-# Play game# 2833 with 7-ply search. You will see the 1556664 high score.
+# Play game# 2833 with 7-ply search. You will see the 1556664 score.
 ./2048 -d7 2833
 ```
 
