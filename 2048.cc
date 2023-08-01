@@ -379,7 +379,8 @@ void RunServer(int server_port) {
       perror("In accept");
       exit(EXIT_FAILURE);
     }
-    new std::thread(std::bind(RunAgent, client_socket));
+    std::thread t(std::bind(RunAgent, client_socket));
+    t.detach();
   }
 
   close(server_socket);
